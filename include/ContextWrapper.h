@@ -35,9 +35,15 @@
 #endif
 
 // opengl, glew
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+#ifdef __APPLE__
+    #include <GL/glew.h>
+#else
+    // opengl, glew
+    #include <GL/glew.h>
+    #include <GL/gl.h>
+    #include <GL/glu.h>
+#endif
+
 
 // Oculus Rift
 #include <OVR.h>
@@ -153,11 +159,11 @@ struct EyePatch
 
         glGenBuffers(1, &_vertexBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data[eye]), &g_vertex_buffer_data[eye][0][0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data[eye]), &(g_vertex_buffer_data[eye][0][0]), GL_STATIC_DRAW);
 
         glGenBuffers(1, &_uvBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, _uvBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data[eye]), &g_uv_buffer_data[eye][0][0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data[eye]), &(g_uv_buffer_data[eye][0][0]), GL_STATIC_DRAW);
     }
 
     void render()

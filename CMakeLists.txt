@@ -82,21 +82,39 @@ ENDIF()
 # -----------------------------------------------------------------------------
 # oculus rift
 INCLUDE_DIRECTORIES(${OCULUSRIFT_DIR}/LibOVR/Include)
-LINK_DIRECTORIES(${OCULUSRIFT_DIR}/LibOVR/Lib/Linux/Release/x86_64)
+
+IF(APPLE)
+	# osx
+	LINK_DIRECTORIES(${OCULUSRIFT_DIR}/LibOVR/Lib/MacOS/Release)
+ELSEIF(UNIX)
+	# unix/linux,shared libs of boost should be installed
+	LINK_DIRECTORIES(${OCULUSRIFT_DIR}/LibOVR/Lib/Linux/Release/x86_64)
+ELSE()
+	# windows will find the right libs by itself
+	LINK_DIRECTORIES ( ${xxxxxxxx} )	
+ENDIF()
+
 SET(LIBS ${LIBS} ovr)
+
+# Oculus SDK dependencies for Mac OSX:
+IF (APPLE)
+    FIND_LIBRARY (CORE_FOUNDATION CoreFoundation)
+    FIND_LIBRARY (CORE_GRAPHICS CoreGraphics)
+    FIND_LIBRARY (IOKIT IOKit)
+ENDIF()
 
 # -----------------------------------------------------------------------------
 # glew
 SET(LIBS ${LIBS} GLEW)
 
+FIND_PACKAGE(OpenGL REQUIRED)
 
 # -----------------------------------------------------------------------------
 # swig
 SET(CMAKE_SWIG_FLAGS -package SimpleOculusRift)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include)
-# only for debug
-# INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/include/include_openni)
+
 
 ###############################################################################
 # set local libraries
@@ -173,8 +191,9 @@ SET_SOURCE_FILES_PROPERTIES(${SWIG_SOURCES} PROPERTIES CPLUSPLUS ON)
 SET(CMAKE_SWIG_OUTDIR ${CMAKE_CURRENT_BINARY_DIR}/swig_src)
 MAKE_DIRECTORY(${CMAKE_CURRENT_BINARY_DIR}/src)
 
-
-IF(UNIX)  
+IF(APPLE)
+  SET(LIBS ${LIBS} ${CORE_FOUNDATION} ${CORE_GRAPHICS} ${IOKIT} ${OPENGL_LIBRARIES} "-framework ApplicationServices")
+ELSEIF(UNIX)  
   SET(LIBS ${LIBS} udev pthread GL X11 Xinerama)
 ENDIF()
     
@@ -211,7 +230,6 @@ IF(UNIX)
 	SET_TARGET_PROPERTIES(SimpleOculusRift PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
   ENDIF()
 ENDIF()
-
 
 
 ADD_CUSTOM_COMMAND(TARGET SimpleOculusRift

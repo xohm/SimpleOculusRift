@@ -54,7 +54,7 @@ bool ContextWrapper::_globalContextFlag = false;
 ContextWrapper::ContextWrapper():
   _initFlag(false),
   _firstTimeUpdate(false),
-  _sensorFusion(_sensorFusion),
+  _sensorFusion(NULL),
   _frameBuffer(0),
   _frameBufferTexture(0),
   _frameBufferDepth(0),
@@ -261,7 +261,6 @@ bool ContextWrapper::init()
         _sensorFusion->SetDelegateMessageHandler(this);
     }
 
-
     ////////////////////////////////////////////////////////////////////////////
     // setup opengl
     setupShaders();
@@ -340,6 +339,7 @@ OVR::Matrix4f ContextWrapper::eyeView(OVR::Util::Render::StereoEye eye)
 void ContextWrapper::setupShaders()
 {
     // initialise glew API.
+    glewExperimental = GL_TRUE;
     glewInit();
 
     // setup eye quads.
@@ -368,6 +368,7 @@ void ContextWrapper::setupShaders()
         logOut(Msg_Info,"%s", &VertexShaderErrorMessage[0]);
     }
 
+
     // Compile Fragment Shader
     logOut(Msg_Info,"Compiling fragment shader");
     //glShaderSource(FragmentShaderID, 1, &oculusRiftFragmentShader , NULL);
@@ -384,6 +385,7 @@ void ContextWrapper::setupShaders()
         glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
         logOut(Msg_Info,"%s", &FragmentShaderErrorMessage[0]);
     }
+
 
     // Link the program
     logOut(Msg_Info,"Linking program");
@@ -522,7 +524,8 @@ void ContextWrapper::renderEyePatch(OVR::Util::Render::StereoEye eye)
         OVR::Vector2f ScaleIn           ((2/w), (2/h) / as);
 
         // fragment shader.
-        gl_uniform_1i("WarpTexture", 0);
+ //       gl_uniform_1i("WarpTexture", 0);
+ //       gl_uniform_1i("tex", 0);
         gl_uniform_2f("LensCenter",     LensCenter.x,    LensCenter.y);
         gl_uniform_2f("ScreenCenter",   ScreenCenter.x,  ScreenCenter.y);
         gl_uniform_2f("Scale",          Scale.x,         Scale.y);
@@ -571,7 +574,9 @@ void ContextWrapper::postprocessFramebuffer(void)
     glUseProgram(_shaderProgram);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
-    gl_uniform_1i("texture0", 0);
+//    gl_uniform_1i("texture0", 0);
+    gl_uniform_1i("texture", 0);
+    gl_uniform_1i("distortion", 1);
 
     // render left eye with distortion shader
     renderEyePatch(OVR::Util::Render::StereoEye_Left);

@@ -2,20 +2,17 @@
 # --------------------------------------------------------------------------
 # buildscript for osx 32bit/64bit
 # --------------------------------------------------------------------------
-# Processing Wrapper for the OpenNI/Kinect library
-# http://code.google.com/p/simple-openni
+# Processing Wrapper for the Oculus Rift library
+# http://github.com/xohm/SimpleOculusRift
 # --------------------------------------------------------------------------
 # prog:  Max Rheiner / Interaction Design / zhdk / http://iad.zhdk.ch/
-# date:  06/11/2011 (m/d/y)
+# date:  06/24/2014 (m/d/y)
 # ----------------------------------------------------------------------------
 # Change those vars to the folders you have on your system:
-#	-DOPEN_NI_INCLUDE 	= folder of OpenNI headers
-#	-DXN_NITE_INCLUDE 	= folder of Nite headers
-#	-DXN_NITE_LIB 		= folder of Nite libraries
 #	-DEIGEN3D_INCLUDE 	= folder of Eigen3d headers
 #	-DBOOST_ROOT 		= folder of Boost root
 #	-DBOOST_LIBRARYDIR 	= folder of Boost library folder
-#	-DP5_JAR 			= filepath to your core.jar (Processing)
+#	-DP5_JAR 		= filepath to your core.jar (Processing)
 # ----------------------------------------------------------------------------
 
 # optional, but gives a clean build
@@ -30,13 +27,13 @@ cd ./build
  
 echo "--- generate cmake ---"
 cmake -DCMAKE_BUILD_TYPE=Release \
-      -DOPEN_NI_BASE=/Users/max/Documents/pDev/openni/OpenNI-MacOSX-x64-2.2/ \
-	  -DOPEN_NI_LIBDIR=./dist/all/SimpleOpenNI/library/osx/ \
-	  -DNITE_BASE=/Users/max/Documents/pDev/openni/NiTE-MacOSX-x64-2.2/ \
 	  -DEIGEN3D_INCLUDE=/usr/local/include/eigen3/ \
-	  -DP5_JAR=/Applications/Processing.app/Contents/Resources/Java/core/library/core.jar \
-	  -DCMAKE_OSX_ARCHITECTURES="i386;x86_64" \
+          -DOCULUSRIFT_DIR=/Users/max/Documents/libs/OculusSDK \
+          -DP5_JAR=/Applications/Processing.app/Contents/Java/core/library/core.jar \
+          -DCMAKE_OSX_ARCHITECTURES="x86_64" \
 	  ..
+
+#          -DCMAKE_OSX_ARCHITECTURES="i386;x86_64" \
 
 
 echo "--- build ---"
@@ -46,22 +43,17 @@ make -j6
 
 # change name path for a local library
 # boost
-install_name_tool -change /usr/local/lib/libboost_thread-mt.dylib @loader_path/./osx/libboost_thread-mt.dylib libSimpleOpenNI.jnilib
-install_name_tool -change /usr/local/lib/libboost_system-mt.dylib @loader_path/./osx/libboost_system-mt.dylib libSimpleOpenNI.jnilib
-# nite
-install_name_tool -change libOpenNI2.dylib @loader_path/./osx/libOpenNI2.dylib libSimpleOpenNI.jnilib
-install_name_tool -change libNiTE2.dylib @loader_path/./osx/libNiTE2.dylib libSimpleOpenNI.jnilib
-
+#install_name_tool -change /usr/local/lib/libboost_system-mt.dylib @loader_path/./osx/libboost_system-mt.dylib libSimpleOculusRift.jnilib
 
 echo "Lib paths:"
-otool -L libSimpleOpenNI.jnilib
+otool -L libSimpleOculusRift.jnilib
 
 
 
 echo "--- copy ---"
 # copy the library
-cp SimpleOpenNI.jar ../dist/all/SimpleOpenNI/library
-cp libSimpleOpenNI.jnilib ../dist/all/SimpleOpenNI/library
+cp SimpleOculusRift.jar ../dist/all/SimpleOculusRift/library
+cp libSimpleOculusRift.jnilib ../dist/all/SimpleOculusRift/library
 
 # copy the doc
-cp -r ./doc/* ../dist/all/SimpleOpenNI/documentation/
+cp -r ./doc/* ../dist/all/SimpleOculusRift/documentation/
