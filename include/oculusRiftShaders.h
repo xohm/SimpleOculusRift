@@ -27,5 +27,6 @@
 
 extern const char* oculusRiftVertexShader;
 extern const char* oculusRiftFragmentShader;
+extern const char* oculusRiftChromaticFragmentShader;
 
 #endif // _OCULUSRIFTSHADERS_H_

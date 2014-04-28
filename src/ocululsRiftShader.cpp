@@ -22,6 +22,7 @@
  * ----------------------------------------------------------------------------
  */
 
+#include "oculusRiftShaders.h"
 
 const char* oculusRiftVertexShader =
 "#version 330 core\n"
@@ -63,4 +64,45 @@ const char* oculusRiftFragmentShader =
 "       outcolor = vec4(0);\n"
 "   else\n"
 "          outcolor = texture2D(texture0, tc);\n"
+"};\n";
+
+
+const char* oculusRiftChromaticFragmentShader =
+"#version 330\n"
+"\n"
+"uniform vec2 LensCenter;\n"
+"uniform vec2 ScreenCenter;\n"
+"uniform vec2 Scale;\n"
+"uniform vec2 ScaleIn;\n"
+"uniform vec4 HmdWarpParam;\n"
+"uniform vec4 ChromAbParam;\n"
+"uniform sampler2D texture0;\n"
+"in vec2 oTexCoord;\n"
+"\n"
+"void main(void)\n"
+"{\n"
+"	vec2 theta = (oTexCoord - LensCenter) * ScaleIn; // Scales texture coordinates to [-1, 1]\n"
+"	float rSq = theta.x * theta.x + theta.y * theta.y;\n"
+"	vec2 theta1 = theta * ( HmdWarpParam.x +\n"
+"							HmdWarpParam.y * rSq +\n"
+"							HmdWarpParam.z * rSq * rSq +\n"
+"							HmdWarpParam.w * rSq * rSq * rSq);\n"
+"	vec2 thetaBlue = theta1 * (ChromAbParam.z + ChromAbParam.w * rSq);\n"
+"	vec2 tcBlue = LensCenter + Scale * thetaBlue;\n"
+"\n"
+"	if (any(bvec2(clamp(tcBlue, ScreenCenter - vec2(0.25, 0.5), ScreenCenter + vec2(0.25, 0.5)) - tcBlue))) {\n"
+"		gl_FragColor = vec4(0, 0, 0, 0);\n"
+"		return;\n"
+"	}\n"
+"\n"
+"	// Now do blue texture lookup.\n"
+"	float blue = texture2D(texture0, tcBlue).b;\n"
+"	// Do green lookup (no scaling).\n"
+"	vec2 tcGreen = LensCenter + Scale * theta1;\n"
+"	float green = texture2D(texture0, tcGreen).g;\n"
+"	// Do red scale and lookup.\n"
+"	vec2 thetaRed = theta1 * (ChromAbParam.x + ChromAbParam.y * rSq);\n"
+"	vec2 tcRed = LensCenter + Scale * thetaRed;\n"
+"	float red = texture2D(texture0, tcRed).r;\n"
+"	gl_FragColor = vec4(red, green, blue, 1);\n"
 "};\n";

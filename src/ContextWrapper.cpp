@@ -280,19 +280,19 @@ void applyGlMatrix(const OVR::Matrix4f& matrix)
 
 void ContextWrapper::setupCamera(OVR::Util::Render::StereoEye eye)
 {
-        const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams(eye);
-        glViewport(params.VP.x, params.VP.y, params.VP.w, params.VP.h);
+    const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams(eye);
+    glViewport(params.VP.x, params.VP.y, params.VP.w, params.VP.h);
 
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        applyGlMatrix(params.ViewAdjust);
-        applyGlMatrix(params.Projection);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    applyGlMatrix(params.ViewAdjust);
+    applyGlMatrix(params.Projection);
 
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-        OVR::Matrix4f eye_view = eyeView(eye);
-        applyGlMatrix(eye_view);
+    OVR::Matrix4f eye_view = eyeView(eye);
+    applyGlMatrix(eye_view);
 }
 
 void ContextWrapper::getMatrix(int eye,
@@ -319,22 +319,22 @@ void ContextWrapper::getMatrix(int eye,
 
 OVR::Matrix4f ContextWrapper::eyeView(OVR::Util::Render::StereoEye eye)
 {
-        static const OVR::Vector3f UpVector(0.0f, 1.0f, 0.0f);
-        static const OVR::Vector3f ForwardVector(0.0f, 0.0f, -1.0f);
-        static const OVR::Vector3f RightVector(1.0f, 0.0f, 0.0f);
+    static const OVR::Vector3f UpVector(0.0f, 1.0f, 0.0f);
+    static const OVR::Vector3f ForwardVector(0.0f, 0.0f, -1.0f);
+    static const OVR::Vector3f RightVector(1.0f, 0.0f, 0.0f);
 
-        float yaw, pitch, roll;
-        sensorOrientation(yaw, pitch, roll);
-        OVR::Matrix4f eye_rpy = OVR::Matrix4f::RotationY(yaw) *
-                                OVR::Matrix4f::RotationX(pitch) *
-                                OVR::Matrix4f::RotationZ(roll);
+    float yaw, pitch, roll;
+    sensorOrientation(yaw, pitch, roll);
+    OVR::Matrix4f eye_rpy = OVR::Matrix4f::RotationY(yaw) *
+                            OVR::Matrix4f::RotationX(pitch) *
+                            OVR::Matrix4f::RotationZ(roll);
 
-        OVR::Vector3f eye_pos       = _position;
-        OVR::Vector3f eye_forward   = eye_rpy.Transform(ForwardVector);
-        OVR::Vector3f eye_up        = eye_rpy.Transform(UpVector);
-        OVR::Vector3f eye_right     = eye_rpy.Transform(RightVector);
-        OVR::Matrix4f eye_view      = OVR::Matrix4f::LookAtRH(eye_pos, eye_pos + eye_forward, eye_up);
-        return eye_view;
+    OVR::Vector3f eye_pos       = _position;
+    OVR::Vector3f eye_forward   = eye_rpy.Transform(ForwardVector);
+    OVR::Vector3f eye_up        = eye_rpy.Transform(UpVector);
+    OVR::Vector3f eye_right     = eye_rpy.Transform(RightVector);
+    OVR::Matrix4f eye_view      = OVR::Matrix4f::LookAtRH(eye_pos, eye_pos + eye_forward, eye_up);
+    return eye_view;
 }
 
 void ContextWrapper::setupShaders()
@@ -370,7 +370,9 @@ void ContextWrapper::setupShaders()
 
     // Compile Fragment Shader
     logOut(Msg_Info,"Compiling fragment shader");
-    glShaderSource(FragmentShaderID, 1, &oculusRiftFragmentShader , NULL);
+    //glShaderSource(FragmentShaderID, 1, &oculusRiftFragmentShader , NULL);
+    glShaderSource(FragmentShaderID, 1, &oculusRiftChromaticFragmentShader , NULL);
+
     glCompileShader(FragmentShaderID);
 
     // Check Fragment Shader
@@ -462,7 +464,7 @@ void ContextWrapper::renderScene2Framebuffer()
     // Render to our framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
 
-    glClearColor(0.1f, 0.4f, 0.1f, 1.0f);
+    //glClearColor(0.1f, 0.4f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // draw left viewpoint
@@ -504,22 +506,23 @@ void ContextWrapper::renderEyePatch(OVR::Util::Render::StereoEye eye)
         const OVR::Util::Render::DistortionConfig& distortion = *params.pDistortion;
 
         float w  = float(params.VP.w) / float(width),
-                h  = float(params.VP.h) / float(height),
-                x  = float(params.VP.x) / float(width),
-                y  = float(params.VP.y) / float(height);
+              h  = float(params.VP.h) / float(height),
+              x  = float(params.VP.x) / float(width),
+              y  = float(params.VP.y) / float(height);
         float as = float(params.VP.w) / float(params.VP.h);
 
         // We are using 1/4 of DistortionCenter offset value here, since it is
         // relative to [-1,1] range that gets mapped to [0, 0.5].
         float HmdWarpParam[4]   = { distortion.K[0], distortion.K[1], distortion.K[2], distortion.K[3] };
         float ChromAbParam[4]   = { distortion.ChromaticAberration[0], distortion.ChromaticAberration[1], distortion.ChromaticAberration[2], distortion.ChromaticAberration[3] };
-        float scaleFactor               = 1.0f / distortion.Scale;
-        OVR::Vector2f LensCenter        (x + (w + distortion.XCenterOffset * 0.5f)*0.5f,        y + h*0.5f);
-        OVR::Vector2f ScreenCenter      (x + w*0.5f,                                                                            y + h*0.5f);
-        OVR::Vector2f Scale             ((w/2) * scaleFactor,                                                           (h/2) * scaleFactor * as);
-        OVR::Vector2f ScaleIn           ((2/w),                                                                                         (2/h) / as);
+        float scaleFactor       = 1.0f / distortion.Scale;
+        OVR::Vector2f LensCenter        (x + (w + (eye == OVR::Util::Render::StereoEye_Right ? - distortion.XCenterOffset: distortion.XCenterOffset) * 0.5f)*0.5f, y + h*0.5f);
+        OVR::Vector2f ScreenCenter      (x + w*0.5f, y + h*0.5f);
+        OVR::Vector2f Scale             ((w/2) * scaleFactor, (h/2) * scaleFactor * as);
+        OVR::Vector2f ScaleIn           ((2/w), (2/h) / as);
 
         // fragment shader.
+        gl_uniform_1i("WarpTexture", 0);
         gl_uniform_2f("LensCenter",     LensCenter.x,    LensCenter.y);
         gl_uniform_2f("ScreenCenter",   ScreenCenter.x,  ScreenCenter.y);
         gl_uniform_2f("Scale",          Scale.x,         Scale.y);
@@ -545,18 +548,13 @@ void ContextWrapper::postprocessFramebuffer(void)
     glEnable(GL_TEXTURE_2D);
 
     // Render to the screen
-
+    /*
     GLint oldFBO;
     GLint oldTEX;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTEX);
+    */
 
-   // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-   // logOut(Msg_Info,"info %d",oldFBO);
-
- //   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-// glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
 
     // reset the screen params.
     glViewport(0, 0,_hmdInfo.HResolution,_hmdInfo.VResolution);
@@ -584,10 +582,6 @@ void ContextWrapper::postprocessFramebuffer(void)
     // clean up.
   //  glBindTexture(GL_TEXTURE_2D, oldTEX);
     //glUseProgram(oldFBO);
-/*
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glUseProgram(0);
-*/
 
     glPopAttrib();
 }

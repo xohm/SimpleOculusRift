@@ -25,6 +25,7 @@ package SimpleOculusRift;
 
 import processing.core.*;
 import java.lang.reflect.Method;
+import processing.opengl.*;
 import java.net.URL;
 
 public class SimpleOculusRift extends ContextWrapper
@@ -230,8 +231,15 @@ public class SimpleOculusRift extends ContextWrapper
              _parent.pushMatrix();
 
              // setup projection matrix
-
              // setup viewport matrix
+             PGraphics3D p3d = (PGraphics3D) _parent.g;
+
+             PMatrix3D proj = p3d.projection;
+             PMatrix3D modelview = p3d.modelview;
+
+             getMatrix(eye,
+                       proj,
+                       modelview) ;
 
              _drawSceneMethod.invoke(_cbObject, new Object[] { (int)eye });
              _parent.popMatrix();
