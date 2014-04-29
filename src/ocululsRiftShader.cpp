@@ -120,7 +120,7 @@ const char* oculusRiftChromaticFragmentShader =
 "	vec2 tcRed = LensCenter + Scale * thetaRed;\n"
 "	float red = texture2D(texture0, tcRed).r;\n"
 "	gl_FragColor = vec4(red, green, blue, 1);\n"
-"};\n";
+"}\n";
 
 /*
 
