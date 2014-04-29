@@ -92,7 +92,7 @@ const char* oculusRiftChromaticFragmentShader =
 "uniform vec4 HmdWarpParam;\n"
 "uniform vec4 ChromAbParam;\n"
 "uniform sampler2D texture0;\n"
-"in vec2 oTexCoord;\n"
+"varying vec2 oTexCoord;\n"
 "\n"
 "void main(void)\n"
 "{\n"
