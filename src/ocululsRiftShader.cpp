@@ -36,7 +36,7 @@ const char* oculusRiftVertexShader =
 "{\n"
 "   gl_Position = vec4(Position, 1);\n"
 "   oTexCoord = TexCoord;\n"
-"};\n";
+"}\n";
 
 /*
 "#version 330 core\n"
@@ -79,7 +79,7 @@ const char* oculusRiftFragmentShader =
 "       outcolor = vec4(0);\n"
 "   else\n"
 "          outcolor = texture2D(texture0, tc);\n"
-"};\n";
+"}\n";
 
 
 const char* oculusRiftChromaticFragmentShader =
