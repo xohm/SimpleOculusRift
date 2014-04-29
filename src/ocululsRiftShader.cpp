@@ -26,6 +26,19 @@
 
 
 const char* oculusRiftVertexShader =
+"#version 110\n"
+"\n"
+"attribute vec3 Position;\n"
+"attribute vec2 TexCoord;\n"
+"varying vec2 oTexCoord;\n"
+"\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(Position, 1);\n"
+"   oTexCoord = TexCoord;\n"
+"};\n";
+
+/*
 "#version 330 core\n"
 "\n"
 "layout(location = 0) in vec3 Position;\n"
@@ -37,6 +50,7 @@ const char* oculusRiftVertexShader =
 "   gl_Position = vec4(Position, 1);\n"
 "   oTexCoord = TexCoord;\n"
 "};\n";
+*/
 
 const char* oculusRiftFragmentShader =
 "#version 110"
