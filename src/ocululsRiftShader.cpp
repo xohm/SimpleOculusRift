@@ -24,7 +24,7 @@
 
 #include "oculusRiftShaders.h"
 
-/*
+
 const char* oculusRiftVertexShader =
 "#version 330 core\n"
 "\n"
@@ -39,7 +39,7 @@ const char* oculusRiftVertexShader =
 "};\n";
 
 const char* oculusRiftFragmentShader =
-"#version 330\n"
+"#version 110"
 "\n"
 "uniform vec2 LensCenter;\n"
 "uniform vec2 ScreenCenter;\n"
@@ -69,7 +69,7 @@ const char* oculusRiftFragmentShader =
 
 
 const char* oculusRiftChromaticFragmentShader =
-"#version 330\n"
+"#version 110\n"
 "\n"
 "uniform vec2 LensCenter;\n"
 "uniform vec2 ScreenCenter;\n"
@@ -107,7 +107,8 @@ const char* oculusRiftChromaticFragmentShader =
 "	float red = texture2D(texture0, tcRed).r;\n"
 "	gl_FragColor = vec4(red, green, blue, 1);\n"
 "};\n";
-*/
+
+/*
 
 const char* oculusRiftVertexShader =
 "#version 110\n"
@@ -129,8 +130,8 @@ const char* oculusRiftChromaticFragmentShader =
 "varying vec2 theta;\n"
 "\n"
 "uniform vec2 LensCenter;\n"
-"uniform vec2 Scale;\n"
 "uniform vec2 ScreenCenter;\n"
+"uniform vec2 Scale;\n"
 "uniform vec4 HmdWarpParam;\n"
 "uniform vec4 ChromAbParam;\n"
 "\n"
@@ -148,9 +149,9 @@ const char* oculusRiftChromaticFragmentShader =
 "    vec2 thetaBlue = theta1 * (ChromAbParam.z + ChromAbParam.w * rSq);\n"
 "    vec2 tcBlue = LensCenter + Scale * thetaBlue;\n"
 "\n"
-"    if (!all(equal(clamp(tcBlue, ScreenCenter - vec2(0.25,0.5), ScreenCenter + vec2(0.25,0.5)),tcBlue)))\n"
+"	if(any(bvec2(clamp(tcBlue, ScreenCenter - vec2(0.25, 0.5), ScreenCenter + vec2(0.25, 0.5)) - tcBlue)))\n"
 "    {\n"
-"        gl_FragColor = vec4(0.0,0.0,0.0,1.0);\n"
+"        gl_FragColor = vec4(1.0,0.0,1.0,1.0);\n"
 "        return;\n"
 "    }\n"
 "\n"
@@ -171,3 +172,4 @@ const char* oculusRiftChromaticFragmentShader =
 "    gl_FragColor = vec4(red, green, blue, 1.0);\n"
 "}\n";
 
+*/

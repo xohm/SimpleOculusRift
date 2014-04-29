@@ -261,6 +261,31 @@ bool ContextWrapper::init()
         _sensorFusion->SetDelegateMessageHandler(this);
     }
 
+    if(_hmd == NULL)
+    {
+        logOut(Msg_Error,"Oculus Rift : no HMD around, set default values");
+        /// If the HMD is turned off or not present, fill in some halfway sensible
+        /// default values here so we can at least see some rendering.
+        ///@todo Grab these values from the HMD setup, see how we did on guesing
+        OVR::HMDInfo& hmd = _hmdInfo;
+        hmd.DesktopX = 0;
+        hmd.DesktopY = 0;
+        hmd.HResolution = 1280;
+        hmd.VResolution = 800;
+
+        hmd.HScreenSize = 0.09f;
+        hmd.VScreenSize = 0.06f;
+        hmd.VScreenCenter = 0.02f;
+
+        hmd.DistortionK[0] = 1.0f;
+        hmd.DistortionK[1] = 0.5f;
+        hmd.DistortionK[2] = 0.25f;
+        hmd.DistortionK[3] = 0.0f;
+
+        hmd.EyeToScreenDistance = 0.01f;
+        hmd.InterpupillaryDistance = 0.064f;
+        hmd.LensSeparationDistance = 0.07f;
+    }
     ////////////////////////////////////////////////////////////////////////////
     // setup opengl
     setupShaders();
@@ -574,9 +599,10 @@ void ContextWrapper::postprocessFramebuffer(void)
     glUseProgram(_shaderProgram);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
-//    gl_uniform_1i("texture0", 0);
-    gl_uniform_1i("texture", 0);
-    gl_uniform_1i("distortion", 1);
+  //  gl_uniform_1i("texture0", 0);
+    gl_uniform_1i("tex", 0);
+  //  gl_uniform_1i("texture", 0);
+ //   gl_uniform_1i("distortion", 1);
 
     // render left eye with distortion shader
     renderEyePatch(OVR::Util::Render::StereoEye_Left);
