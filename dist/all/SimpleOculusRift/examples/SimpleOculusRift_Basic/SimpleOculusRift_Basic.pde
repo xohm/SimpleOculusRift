@@ -21,9 +21,7 @@ void setup()
   println("OPENGL_VERSION: " + PGraphicsOpenGL.OPENGL_VERSION);
   println("GLSL_VERSION: " + PGraphicsOpenGL.GLSL_VERSION);
   
-  oculusRiftDev = new SimpleOculusRift(this);
-  
- 
+  oculusRiftDev = new SimpleOculusRift(this); 
 }
 
 void draw()
