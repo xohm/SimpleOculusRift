@@ -43,7 +43,8 @@ make -j6
 
 # change name path for a local library
 # boost
-#install_name_tool -change /usr/local/lib/libboost_system-mt.dylib @loader_path/./osx/libboost_system-mt.dylib libSimpleOculusRift.jnilib
+install_name_tool -change /usr/local/lib/libboost_system-mt.dylib @loader_path/./osx/libboost_system-mt.dylib libSimpleOculusRift.jnilib
+install_name_tool -change /usr/local/lib/libGLEW.1.10.0.dylib @loader_path/./osx/libGLEW.1.10.0.dylib libSimpleOculusRift.jnilib
 
 echo "Lib paths:"
 otool -L libSimpleOculusRift.jnilib
