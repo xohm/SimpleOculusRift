@@ -591,8 +591,11 @@ void ContextWrapper::renderEyePatch(OVR::Util::Render::StereoEye eye)
         static bool firstTime = false;
         if(!firstTime)
         {
-            firstTime = true;
+          //  firstTime = true;
             std::cout << "----------------------" << std::endl;
+
+            std::cout << "params: " <<  params.VP.x << "," << params.VP.y << "," << params.VP.w << "," << params.VP.h << std::endl;
+
             std::cout << "LensCenter: " <<  LensCenter.x << "," << LensCenter.y << std::endl;
             std::cout << "ScreenCenter: " <<  ScreenCenter.x << "," << ScreenCenter.y << std::endl;
             std::cout << "Scale: " <<  Scale.x << "," << Scale.y << std::endl;
