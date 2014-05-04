@@ -391,7 +391,8 @@ void ContextWrapper::setupShaders()
     std::string strVertexShader((std::istreambuf_iterator<char>(vShaderFile)),
                           std::istreambuf_iterator<char>());
 
-    std::ifstream fShaderFile(std::string(_dataFolder +  std::string("shaders/ovrChromFragShader.glsl")).c_str());
+   // std::ifstream fShaderFile(std::string(_dataFolder +  std::string("shaders/ovrChromFragShader.glsl")).c_str());
+    std::ifstream fShaderFile(std::string(_dataFolder +  std::string("shaders/ovrFragShader.glsl")).c_str());
     std::string strFragShader((std::istreambuf_iterator<char>(fShaderFile)),
                           std::istreambuf_iterator<char>());
 
