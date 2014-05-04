@@ -31,6 +31,10 @@
 
 #include <cmath>
 
+#ifdef __APPLE__
+    #include <unistd.h>
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 
