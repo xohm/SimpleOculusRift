@@ -622,12 +622,12 @@ void ContextWrapper::postprocessFramebuffer(void)
     glEnable(GL_TEXTURE_2D);
 
     // Render to the screen
-    /*
+
     GLint oldFBO;
     GLint oldTEX;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTEX);
-    */
+
 
 
     // reset the screen params.
@@ -658,7 +658,7 @@ void ContextWrapper::postprocessFramebuffer(void)
 
     // clean up.
   //  glBindTexture(GL_TEXTURE_2D, oldTEX);
-    //glUseProgram(oldFBO);
+    glUseProgram(oldFBO);
 
     glPopAttrib();
 }
