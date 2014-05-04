@@ -17,6 +17,10 @@ SimpleOculusRift   oculusRiftDev;
 void setup()
 {
   size(1280,800,OPENGL);
+  
+  println("OPENGL_VERSION: " + PGraphicsOpenGL.OPENGL_VERSION);
+  println("GLSL_VERSION: " + PGraphicsOpenGL.GLSL_VERSION);
+  
   oculusRiftDev = new SimpleOculusRift(this);
   
  
@@ -39,7 +43,7 @@ void draw()
 // SimpleOculusRift call for drawing the scene for each eye
 void onDrawScene(int eye)
 {  
-  stroke(200,100,220);
+  stroke(200,200,220);
   
   beginShape(LINES);
   vertex(-1600,200,0);
