@@ -175,7 +175,7 @@ public class SimpleOculusRift extends ContextWrapper
         SimpleOculusRift.chdir(curPath);
 
 */
-        setDataFolder(getLibraryPathLinux());
+        setDataFolder(getLibraryPathLinux() + "/SimpleOculusRift/library/data/");
 
         this._parent 	= parent;
         parent.registerDispose(this);

@@ -93,6 +93,7 @@ std::string ContextWrapper::getcwd()
 void ContextWrapper::setDataFolder(const char* dir)
 {
     _dataFolder = dir;
+    std::cout << dir << std::endl;
 }
 
 void ContextWrapper::close()
@@ -386,11 +387,11 @@ void ContextWrapper::setupShaders()
 
 
     // test, load shader shaders
-    std::ifstream vShaderFile("/media/dataDisk/ownDev/development/ownDev/SimpleOculusRift/data/shaders/ovrVertexShader.glsl");
+    std::ifstream vShaderFile(std::string(_dataFolder +  std::string("shaders/ovrVertexShader.glsl")).c_str());
     std::string strVertexShader((std::istreambuf_iterator<char>(vShaderFile)),
                           std::istreambuf_iterator<char>());
 
-    std::ifstream fShaderFile("/media/dataDisk/ownDev/development/ownDev/SimpleOculusRift/data/shaders/ovrChromFragShader.glsl");
+    std::ifstream fShaderFile(std::string(_dataFolder +  std::string("shaders/ovrChromFragShader.glsl")).c_str());
     std::string strFragShader((std::istreambuf_iterator<char>(fShaderFile)),
                           std::istreambuf_iterator<char>());
 
