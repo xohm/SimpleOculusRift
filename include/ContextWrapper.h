@@ -215,6 +215,7 @@ public:
     // init methods
     static bool initContext();
     bool init();
+    void setDataFolder(const char* dir);
 
     bool isInit(){	return _initFlag; }
 
@@ -333,6 +334,9 @@ protected:
     GLuint _shaderProgram;
 
     EyePatch _eyePatch[3];
+
+    std::string _dataFolder;
+
 };
 
 

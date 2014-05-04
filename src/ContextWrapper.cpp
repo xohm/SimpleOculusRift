@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <fstream>
 
 #include "ContextWrapper.h"
 
@@ -87,6 +88,11 @@ std::string ContextWrapper::getcwd()
         return std::string(buf);
     else
         return std::string("");
+}
+
+void ContextWrapper::setDataFolder(const char* dir)
+{
+    _dataFolder = dir;
 }
 
 void ContextWrapper::close()
@@ -375,6 +381,23 @@ void ContextWrapper::setupShaders()
     for(int i = 0; i < 3; ++i)
         _eyePatch[i].setup((OVR::Util::Render::StereoEye) i);
 
+    const char* vertexShader    = oculusRiftVertexShader;
+    const char* fragShader      = oculusRiftChromaticFragmentShader;
+
+
+    // test, load shader shaders
+    std::ifstream vShaderFile("/media/dataDisk/ownDev/development/ownDev/SimpleOculusRift/data/shaders/ovrVertexShader.glsl");
+    std::string strVertexShader((std::istreambuf_iterator<char>(vShaderFile)),
+                          std::istreambuf_iterator<char>());
+
+    std::ifstream fShaderFile("/media/dataDisk/ownDev/development/ownDev/SimpleOculusRift/data/shaders/ovrChromFragShader.glsl");
+    std::string strFragShader((std::istreambuf_iterator<char>(fShaderFile)),
+                          std::istreambuf_iterator<char>());
+
+    vertexShader = strVertexShader.c_str();
+    fragShader = strFragShader.c_str();
+
+
     // Now create the shaders
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
@@ -384,7 +407,7 @@ void ContextWrapper::setupShaders()
 
     // Compile Vertex Shader
     logOut(Msg_Info,"Compiling vertex shader");
-    glShaderSource(VertexShaderID, 1, &oculusRiftVertexShader , NULL);
+    glShaderSource(VertexShaderID, 1, &vertexShader , NULL);
     glCompileShader(VertexShaderID);
 
     // Check Vertex Shader
@@ -401,7 +424,7 @@ void ContextWrapper::setupShaders()
     // Compile Fragment Shader
     logOut(Msg_Info,"Compiling fragment shader");
     //glShaderSource(FragmentShaderID, 1, &oculusRiftFragmentShader , NULL);
-    glShaderSource(FragmentShaderID, 1, &oculusRiftChromaticFragmentShader , NULL);
+    glShaderSource(FragmentShaderID, 1, &fragShader , NULL);
 
     glCompileShader(FragmentShaderID);
 

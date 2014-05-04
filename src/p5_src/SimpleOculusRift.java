@@ -159,6 +159,7 @@ public class SimpleOculusRift extends ContextWrapper
     */
     public SimpleOculusRift(PApplet parent)
     {
+    /*
         String curPath = SimpleOculusRift.getcwd();
         SimpleOculusRift.chdir(new String(nativDepLibPath));
 
@@ -172,6 +173,19 @@ public class SimpleOculusRift extends ContextWrapper
         this.init();
 
         SimpleOculusRift.chdir(curPath);
+
+*/
+        setDataFolder(getLibraryPathLinux());
+
+        this._parent 	= parent;
+        parent.registerDispose(this);
+
+        // setup the callbacks
+        setupCallbackFunc();
+
+        // start openni
+        this.init();
+
     }
 
 

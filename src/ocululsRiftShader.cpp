@@ -24,7 +24,6 @@
 
 #include "oculusRiftShaders.h"
 
-/*
 const char* oculusRiftVertexShader =
 "#version 110\n"
 "\n"
@@ -37,21 +36,6 @@ const char* oculusRiftVertexShader =
 "   gl_Position = vec4(Position, 1);\n"
 "   oTexCoord = TexCoord;\n"
 "}\n";
-
-
-const char* oculusRiftVertexShader =
-"#version 330 core\n"
-"\n"
-"layout(location = 0) in vec3 Position;\n"
-"layout(location = 1) in vec2 TexCoord;\n"
-"out vec2 oTexCoord;\n"
-"\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(Position, 1);\n"
-"   oTexCoord = TexCoord;\n"
-"};\n";
-
 
 const char* oculusRiftFragmentShader =
 "#version 110"
@@ -82,7 +66,6 @@ const char* oculusRiftFragmentShader =
 "          outcolor = texture2D(texture0, tc);\n"
 "}\n";
 
-/*
 const char* oculusRiftChromaticFragmentShader =
 "#version 110\n"
 "\n"
@@ -124,7 +107,7 @@ const char* oculusRiftChromaticFragmentShader =
 "}\n";
 
 
-
+/*
 const char* oculusRiftVertexShader =
 "#version 110\n"
 "\n"
@@ -187,7 +170,8 @@ const char* oculusRiftChromaticFragmentShader =
 "\n"
 "    gl_FragColor = vec4(red, green, blue, 1.0);\n"
 "}\n";
-*/
+
+/*
 
 const char* oculusRiftVertexShader =
 "#version 330 core\n"
@@ -271,3 +255,4 @@ const char* oculusRiftChromaticFragmentShader =
 "	float red = texture2D(texture0, tcRed).r;\n"
 "	gl_FragColor = vec4(red, green, blue, 1);\n"
 "};\n";
+*/

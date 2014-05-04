@@ -84,6 +84,7 @@ public:
 
     bool init();
     void close();
+    void setDataFolder(const char* dir);
 
     virtual void draw();
     virtual void drawScene(int eye);
