@@ -579,12 +579,26 @@ void ContextWrapper::renderEyePatch(OVR::Util::Render::StereoEye eye)
         // fragment shader.
  //       gl_uniform_1i("WarpTexture", 0);
  //       gl_uniform_1i("tex", 0);
+
         gl_uniform_2f("LensCenter",     LensCenter.x,    LensCenter.y);
         gl_uniform_2f("ScreenCenter",   ScreenCenter.x,  ScreenCenter.y);
         gl_uniform_2f("Scale",          Scale.x,         Scale.y);
         gl_uniform_2f("ScaleIn",        ScaleIn.x,       ScaleIn.y);
         gl_uniform_4f("HmdWarpParam",   HmdWarpParam[0], HmdWarpParam[1], HmdWarpParam[2], HmdWarpParam[3]);
         gl_uniform_4f("ChromAbParam",   ChromAbParam[0], ChromAbParam[1], ChromAbParam[2], ChromAbParam[3]);
+
+        static bool firstTime = false;
+        if(!firstTime)
+        {
+            firstTime = true;
+            std::cout << "----------------------" << std::endl;
+            std::cout << "LensCenter: " <<  LensCenter.x << "," << LensCenter.y << std::endl;
+            std::cout << "ScreenCenter: " <<  ScreenCenter.x << "," << ScreenCenter.y << std::endl;
+            std::cout << "Scale: " <<  Scale.x << "," << Scale.y << std::endl;
+            std::cout << "ScaleIn: " <<  ScaleIn.x << "," << ScaleIn.y << std::endl;
+            std::cout << "HmdWarpParam: " <<  HmdWarpParam[0] << "," << HmdWarpParam[1]<< "," << HmdWarpParam[2]<< "," << HmdWarpParam[3] << std::endl;
+            std::cout << "ChromAbParam: " <<  ChromAbParam[0] << "," << ChromAbParam[1]<< "," << ChromAbParam[2]<< "," << ChromAbParam[3] << std::endl;
+        }
     }
 
     // render the quad on display.
