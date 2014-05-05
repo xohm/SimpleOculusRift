@@ -122,7 +122,7 @@ public:
     //////////////////////////////////////////////////////////////////////////////
     // init methods
     static bool initContext();
-    bool init();
+    bool init(int w,int h);
     void setDataFolder(const char* dir);
 
     bool isInit(){	return _initFlag; }

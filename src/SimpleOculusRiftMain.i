@@ -82,7 +82,7 @@ public:
     static void chdir(const char* dir);
     static std::string getcwd();
 
-    bool init();
+    bool init(int w,int h);
     void close();
     void setDataFolder(const char* dir);
 

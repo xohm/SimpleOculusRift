@@ -184,7 +184,7 @@ public class SimpleOculusRift extends ContextWrapper
         setupCallbackFunc();
 
         // start openni
-        this.init();
+        this.init(parent.width,parent.height);
 
     }
 

@@ -21,13 +21,13 @@ PVector  planeP3 = new PVector(0,1,0);
 void setup()
 {
   size(1280,800,OPENGL);
-  //size(1920,1200,OPENGL);
+  //  size(1920,1200,OPENGL);
   
   println("OPENGL_VERSION: " + PGraphicsOpenGL.OPENGL_VERSION);
   println("GLSL_VERSION: " + PGraphicsOpenGL.GLSL_VERSION);
   
   oculusRiftDev = new SimpleOculusRift(this); 
-  oculusRiftDev.setBknColor(0,0,0);
+  oculusRiftDev.setBknColor(.4,0,0);
   
   stroke(200,200,220);
   fill(100,100,220);
@@ -40,7 +40,7 @@ void draw()
  /*
   PVector orientation = new PVector();
   oculusRiftDev.sensorOrientation(orientation);
-  println(orientation);
+  println(orientation);   
 */ 
  //  background(110,100,0);
    line(0,0,0,
@@ -92,12 +92,12 @@ void onDrawScene(int eye)
   translate(-1600,200,0);
   sphere(300);
   popMatrix();
-
+   
   pushMatrix();
-  translate(0,0,-250);
+  translate(0,0,-1250);
   rotateY(anim);
   anim+=.008;
-  box(100);
+  box(200);
   popMatrix();
 
   flush();
@@ -105,9 +105,9 @@ void onDrawScene(int eye)
 
 boolean sketchFullScreen() 
 {
-  //return true;
-  return false;
-}
+ // return true;
+      return false;
+}     
 
 void keyPressed()
 {

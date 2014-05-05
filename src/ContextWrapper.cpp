@@ -183,13 +183,21 @@ bool ContextWrapper::initContext()
         return _globalContextFlag;
 }
 
-bool ContextWrapper::init()
+bool ContextWrapper::init(int w,int h)
 {
     if(initContext() == false)
     {
         logOut(Msg_Error,"ContextWrapper::init\n");
         return false;
     }
+
+    _w = w;
+    _h = h;
+
+    /*
+    _w = 1280;
+    _h = 800;
+*/
 
     // start the oculus
     OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
@@ -215,7 +223,8 @@ bool ContextWrapper::init()
         _hmd->GetDeviceInfo(&_hmdInfo);
 
         _stereoConfig.SetHMDInfo(_hmdInfo);
-        _stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, _hmdInfo.HResolution, _hmdInfo.VResolution));
+        _stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, _w, _h));
+        //_stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, _hmdInfo.HResolution, _hmdInfo.VResolution));
         _stereoConfig.SetStereoMode(OVR::Util::Render::Stereo_LeftRight_Multipass);
 
         if (_hmdInfo.HScreenSize > 0.140f) // 7"
@@ -291,11 +300,7 @@ bool ContextWrapper::init()
 
     _initFlag = true;
 
-    _w = 1920;
-    _h = 1200;
 
-    _w = 1280;
-    _h = 800;
 
     return true;
 }
@@ -329,6 +334,8 @@ void ContextWrapper::getMatrix(int eye,
 {
     const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams((OVR::Util::Render::StereoEye)eye);
 
+    glViewport(0,0,_frameBufferTexW,_frameBufferTexH);
+
     OVR::Matrix4f p = params.ViewAdjust * params.Projection;
     memcpy(proj,p.M,sizeof(float) * 16);
 
@@ -339,7 +346,8 @@ void ContextWrapper::getMatrix(int eye,
 */
 
     OVR::Matrix4f eye_view = eyeView((OVR::Util::Render::StereoEye)eye);
-  //  eye_view.Transpose();
+ //   eye_view.Transpose();
+    //eye_view.SetIdentity();
     memcpy(modelView,eye_view.M,sizeof(float) * 16);
 
 }
@@ -353,9 +361,17 @@ OVR::Matrix4f ContextWrapper::eyeView(OVR::Util::Render::StereoEye eye)
 
     float yaw, pitch, roll;
     sensorOrientation(yaw, pitch, roll);
+
     OVR::Matrix4f eye_rpy = OVR::Matrix4f::RotationY(yaw) *
                             OVR::Matrix4f::RotationX(pitch) *
                             OVR::Matrix4f::RotationZ(roll);
+    /*
+
+    OVR::Matrix4f eye_rpy = OVR::Matrix4f::RotationZ(roll) *
+                            OVR::Matrix4f::RotationX(pitch) *
+                            OVR::Matrix4f::RotationY(yaw);
+*/
+
 
     OVR::Vector3f eye_pos       = _position;
     OVR::Vector3f eye_forward   = eye_rpy.Transform(ForwardVector);
