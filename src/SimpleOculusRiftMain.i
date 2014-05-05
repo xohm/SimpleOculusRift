@@ -90,9 +90,15 @@ public:
     virtual void drawScene(int eye);
 
     bool sensorOrientation(float* orientation) const;
+    void resetOrientation();
     void getMatrix(int eye,
                    float* proj,
                    float* modelView);
+
+
+    void setBknColor(float red,float green,float blue);
+    void setBknColor(int red,int green,int blue);
+
 };
 
 };

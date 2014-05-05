@@ -173,6 +173,12 @@ public:
         sensorOrientation(orientation[0],orientation[1],orientation[2]);
     }
 
+    void resetOrientation()
+    {
+        if(_sensorFusion)
+            _sensorFusion->Reset();
+    }
+
     const OVR::HMDInfo& hmdInfo() const
     {
         return _hmdInfo;
@@ -193,7 +199,22 @@ public:
                    float* proj,
                    float* modelView);
 
-protected:    
+
+    void setBknColor(float red,float green,float blue)
+    {
+        _clearColor[0] = red;
+        _clearColor[1] = green;
+        _clearColor[2] = blue;
+    }
+
+    void setBknColor(int red,int green,int blue)
+    {
+        _clearColor[0] = (float)red * 1.0f/255.0f;
+        _clearColor[1] = (float)green * 1.0f/255.0f;
+        _clearColor[2] = (float)blue * 1.0f/255.0f;
+    }
+
+protected:
     enum LogOutMsg{
         Msg_End         = 0,
         Msg_Info        = 1,
@@ -242,6 +263,11 @@ protected:
     GLuint _shaderProgram;
 
     std::string _dataFolder;
+
+    float   _w;
+    float   _h;
+
+    float   _clearColor[3];
 
 };
 

@@ -65,13 +65,17 @@ ContextWrapper::ContextWrapper():
   _frameBufferTexture(0),
   _frameBufferDepth(0),
   _shaderProgram(0),
+/*
   _frameBufferTexW(1024),
   _frameBufferTexH(1024)
-/*
+*/
 _frameBufferTexW(1024*2),
 _frameBufferTexH(1024*2)
-*/
+
 {
+    _clearColor[0] = 0;
+    _clearColor[1] = 0;
+    _clearColor[2] = 0;
 }
 
 ContextWrapper::~ContextWrapper()
@@ -287,6 +291,12 @@ bool ContextWrapper::init()
 
     _initFlag = true;
 
+    _w = 1920;
+    _h = 1200;
+
+    _w = 1280;
+    _h = 800;
+
     return true;
 }
 
@@ -472,11 +482,22 @@ void ContextWrapper::setupFrameBuffer()
 
 void ContextWrapper::draw()
 {    
-    glClearColor(0,0,0, 1);
+    glPushAttrib( GL_TEXTURE_BIT | GL_DEPTH_TEST | GL_LIGHTING );
+
+    glClearColor(_clearColor[0],_clearColor[1],_clearColor[2], 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    /*
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_BLEND);
+**/
 
     renderEye(OVR::Util::Render::StereoEye_Left);
     renderEye(OVR::Util::Render::StereoEye_Right);
+
+    glPopAttrib();
 }
 
 void ContextWrapper::renderEye(OVR::Util::Render::StereoEye eye)
@@ -503,7 +524,7 @@ void ContextWrapper::renderEye(OVR::Util::Render::StereoEye eye)
     glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
 
 
-    glClearColor(.9, .4, 0.4, 1);
+    glClearColor(_clearColor[0],_clearColor[1],_clearColor[2], 1);
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //draw scene to square texture
@@ -548,9 +569,9 @@ void ContextWrapper::renderEye(OVR::Util::Render::StereoEye eye)
     glBindTexture(GL_TEXTURE_2D, 0);
 
     if(eye == OVR::Util::Render::StereoEye_Left)                        // left screen
-        glViewport (0, 0, 1280/2., 800);
+        glViewport (0, 0, _w/2., _h);
     else if (eye == OVR::Util::Render::StereoEye_Right)                  // right screen
-        glViewport (1280/2., 0, 1280/2., 800);
+        glViewport ( _w/2., 0,  _w/2., _h);
 
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
