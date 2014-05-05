@@ -106,103 +106,6 @@ protected:
 //////////////////////////////////////////////////////////////////////////////
 // ContextWrapper
 
-struct EyePatch
-{
-    // various patches for eyes.
-    void setup(OVR::Util::Render::StereoEye eye)
-    {
-        static float g_vertex_buffer_data[3][4][3]=
-        {
-            // centre eye
-            {       { -1.0f, -1.0f, 0.0f, },
-                    {  1.0f, -1.0f, 0.0f, },
-                    {  1.0f,  1.0f, 0.0f, },
-                    { -1.0f,  1.0f, 0.0f, }, },
-
-            // left eye
-            {       { -1.0f, -1.0f, 0.0f, },
-                    {  0.0f, -1.0f, 0.0f, },
-                    {  0.0f,  1.0f, 0.0f, },
-                    { -1.0f,  1.0f, 0.0f, }, },
-
-            // right eye
-            {       {  0.0f, -1.0f, 0.0f, },
-                    {  1.0f, -1.0f, 0.0f, },
-                    {  1.0f,  1.0f, 0.0f, },
-                    {  0.0f,  1.0f, 0.0f, }, },
-        };
-
-        static float g_uv_buffer_data[3][4][2] =
-        {
-            // center eye
-            {       { 0.0f, 0.0f, },
-                    { 1.0f, 0.0f, },
-                    { 1.0f, 1.0f, },
-                    { 0.0f, 1.0f, }, },
-
-            // left eye
-            {       { 0.0f, 0.0f, },
-                    { 0.5f, 0.0f, },
-                    { 0.5f, 1.0f, },
-                    { 0.0f, 1.0f, }, },
-
-            // right eye
-            {       { 0.5f, 0.0f, },
-                    { 1.0f, 0.0f, },
-                    { 1.0f, 1.0f, },
-                    { 0.5f, 1.0f, }, }
-        };
-/*
-        // load up the eye quad.
-        glGenVertexArrays(1, &_vertexArrays);
-        glBindVertexArray(_vertexArrays);
-
-        glGenBuffers(1, &_vertexBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data[eye]), &(g_vertex_buffer_data[eye][0][0]), GL_STATIC_DRAW);
-
-        glGenBuffers(1, &_uvBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, _uvBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data[eye]), &(g_uv_buffer_data[eye][0][0]), GL_STATIC_DRAW);
-        */
-    }
-
-    void render()
-    {
-        /*
-        // render the quad for the eye patch on Oculus display.
-        glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        glBindBuffer(GL_ARRAY_BUFFER, _uvBuffer);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-        glDrawArrays(GL_QUADS, 0, 4);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-    */
-    }
-
-    void cleanup()
-    {
-        /*
-        glDeleteBuffers(1, &_vertexBuffer);
-        glDeleteBuffers(1, &_uvBuffer);
-        glDeleteVertexArrays(1, &_vertexArrays);
-        */
-    }
-
-    GLuint _vertexArrays;
-    GLuint _vertexBuffer;
-    GLuint _uvBuffer;
-};
-
-//////////////////////////////////////////////////////////////////////////////
-// ContextWrapper
 
 class ContextWrapper: public OVR::MessageHandler
 {
@@ -304,10 +207,8 @@ protected:
     void setupShaders();
     void setupFrameBuffer();
 
-    void renderScene2Framebuffer();
-    void renderEyePatch(OVR::Util::Render::StereoEye eye);
-    void postprocessFramebuffer(void);
-
+    void setEyeUniform(OVR::Util::Render::StereoEye eye,const OVR::Util::Render::StereoEyeParams& params);
+    void renderEye(OVR::Util::Render::StereoEye eye);
 
     void gl_uniform_2f       (const char* varname, float a, float b) { GLuint varid = glGetUniformLocation(_shaderProgram, varname); glUniform2f(varid, a, b); }
     void gl_uniform_4f       (const char* varname, float a, float b, float c, float d) { GLuint varid = glGetUniformLocation(_shaderProgram, varname); glUniform4f(varid, a, b, c, d); }
@@ -334,11 +235,11 @@ protected:
     GLuint _frameBuffer;
     GLuint _frameBufferTexture;
     GLuint _frameBufferDepth;
+    int     _frameBufferTexW;
+    int     _frameBufferTexH;
 
     // shader maintenance.
     GLuint _shaderProgram;
-
-    EyePatch _eyePatch[3];
 
     std::string _dataFolder;
 

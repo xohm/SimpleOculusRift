@@ -26,22 +26,21 @@ void setup()
 
 void draw()
 {
-    background(100,100,100);
+//    background(100,100,100);
  /*
   PVector orientation = new PVector();
   oculusRiftDev.sensorOrientation(orientation);
   println(orientation);
 */ 
  //  background(110,100,0);
-   
-   pushMatrix();
+   line(0,0,0,
+        0,800*4,0);   
+ 
    // draw the distortion on the screen
    oculusRiftDev.draw();
    
-   popMatrix();
-   
-   line(0,0,0,
-        1280,800,0);
+
+
 } 
 
 // SimpleOculusRift call for drawing the scene for each eye

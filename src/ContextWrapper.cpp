@@ -64,7 +64,13 @@ ContextWrapper::ContextWrapper():
   _frameBuffer(0),
   _frameBufferTexture(0),
   _frameBufferDepth(0),
-  _shaderProgram(0)
+  _shaderProgram(0),
+  _frameBufferTexW(1024),
+  _frameBufferTexH(1024)
+/*
+_frameBufferTexW(1024*2),
+_frameBufferTexH(1024*2)
+*/
 {
 }
 
@@ -166,31 +172,7 @@ bool ContextWrapper::initContext()
         std::cout << "SimpleOculusRift Version " << (SIMPLEOCULUSRIFT_VERSION / 100) << "." <<  (SIMPLEOCULUSRIFT_VERSION % 100) << std::endl;
 
         _globalContextFlag = true;
-	/*
-        openni::Status rc = openni::OpenNI::initialize();
-        printf("After initialization:\n%s\n", openni::OpenNI::getExtendedError());
 
-        if(rc != openni::STATUS_OK)
-            // error;
-            _globalContextFlag = false;
-        else
-        {
-            _globalContextFlag = true;
-
-            // check the list of all devices
-            openni::Array<openni::DeviceInfo> deviceInfoList;
-            openni::OpenNI::enumerateDevices(&deviceInfoList);
-
-            _deviceCount = deviceInfoList.getSize();
-
-             // init NITE
-            nite::Status niteRc = nite::NiTE::initialize();
-            if(niteRc != nite::STATUS_OK)
-                // error;
-                logOut(Msg_Error,"ContextWrapper::initContext / nite::NiTE::initialize\n");
-
-        }
-      */
         return _globalContextFlag;
     }
     else
@@ -317,7 +299,7 @@ void applyGlMatrix(const OVR::Matrix4f& matrix)
 void ContextWrapper::setupCamera(OVR::Util::Render::StereoEye eye)
 {
     const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams(eye);
-    glViewport(0,0,1024,1024);
+    glViewport(0,0,_frameBufferTexW,_frameBufferTexH);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -379,27 +361,8 @@ void ContextWrapper::setupShaders()
     glewExperimental = GL_TRUE;
     glewInit();
 
-    // setup eye quads.
-    for(int i = 0; i < 3; ++i)
-        _eyePatch[i].setup((OVR::Util::Render::StereoEye) i);
-
     const char* vertexShader    = oculusRiftVertexShader;
-    const char* fragShader      = oculusRiftChromaticFragmentShader;
-
-
-    // test, load shader shaders
-    std::ifstream vShaderFile(std::string(_dataFolder +  std::string("shaders/ovrVertexShader.glsl")).c_str());
-    std::string strVertexShader((std::istreambuf_iterator<char>(vShaderFile)),
-                          std::istreambuf_iterator<char>());
-
-   // std::ifstream fShaderFile(std::string(_dataFolder +  std::string("shaders/ovrChromFragShader.glsl")).c_str());
-    std::ifstream fShaderFile(std::string(_dataFolder +  std::string("shaders/ovrFragShader.glsl")).c_str());
-    std::string strFragShader((std::istreambuf_iterator<char>(fShaderFile)),
-                          std::istreambuf_iterator<char>());
-
-    vertexShader = strVertexShader.c_str();
-    fragShader = strFragShader.c_str();
-
+    const char* fragShader      = oculusRiftFragmentShader;
 
     // Now create the shaders
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -426,7 +389,6 @@ void ContextWrapper::setupShaders()
 
     // Compile Fragment Shader
     logOut(Msg_Info,"Compiling fragment shader");
-    //glShaderSource(FragmentShaderID, 1, &oculusRiftFragmentShader , NULL);
     glShaderSource(FragmentShaderID, 1, &fragShader , NULL);
 
     glCompileShader(FragmentShaderID);
@@ -459,7 +421,7 @@ void ContextWrapper::setupShaders()
         logOut(Msg_Info,"%s", &ProgramErrorMessage[0]);
     }
 
-
+    // setup uniforms
     uniforms[0] = glGetUniformLocation(_shaderProgram, "Texture");
     uniforms[1] = glGetUniformLocation(_shaderProgram, "LensCenter");
     uniforms[2] = glGetUniformLocation(_shaderProgram, "ScreenCenter");
@@ -475,10 +437,6 @@ void ContextWrapper::setupShaders()
 
 void ContextWrapper::setupFrameBuffer()
 {
-    // setup frame buffer. Resolution can be set to anything, preferably higher than oculus resolution.
-    GLsizei width = 1024;
-    GLsizei height = 1024;
-
 
     // The texture we're going to render to
     glGenTextures(1, &_frameBufferTexture);
@@ -491,7 +449,7 @@ void ContextWrapper::setupFrameBuffer()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, _frameBufferTexW, _frameBufferTexH, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
     glGenFramebuffers(1, &_frameBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
@@ -499,7 +457,7 @@ void ContextWrapper::setupFrameBuffer()
     // The depth buffer
     glGenRenderbuffers(1, &_frameBufferDepth);
     glBindRenderbuffer(GL_RENDERBUFFER, _frameBufferDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, _frameBufferTexW, _frameBufferTexH);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _frameBufferTexture, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _frameBufferDepth);
@@ -512,195 +470,142 @@ void ContextWrapper::setupFrameBuffer()
     }
 }
 
-// render the 3D scene for each eye.
-void ContextWrapper::renderScene2Framebuffer()
-{
-    glPushAttrib( GL_TEXTURE_BIT | GL_DEPTH_TEST | GL_LIGHTING );
-/*
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_CULL_FACE);
-*/
-    GLint oldFBO;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
-
-    // Render to our framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
-
-    //glClearColor(0.1f, 0.4f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // draw left viewpoint
-    setupCamera(OVR::Util::Render::StereoEye_Left);
-    drawScene(OVR::Util::Render::StereoEye_Left);
-
-
-    // draw right viewpoint
-    setupCamera(OVR::Util::Render::StereoEye_Right);
-    drawScene(OVR::Util::Render::StereoEye_Right);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
-    glClearColor(0.0f,0.0f,0.0f,1.0f);
-
-    glPopAttrib();
-}
-
-
 void ContextWrapper::draw()
-{
-    glClearColor(1, 0, 0, 0);
+{    
+    glClearColor(0,0,0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    for(int eye = 0; eye < 2; eye++)
-    {  // 0 = left , 1 = right
-        GLint oldFBO;
-        GLint oldTEX;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
-        glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTEX);
-
-
-          // setup scene to render to texture
-          glViewport(0, 0, 1024, 1024);
-          glMatrixMode (GL_PROJECTION);
-
-          glLoadIdentity ();
-
-          glMatrixMode (GL_MODELVIEW);
-          // setup texture
-          glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
-
-          glClearColor(1, 0, 1, 1);
-          glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-          //draw scene to square texture
-          glLoadIdentity ();
-
-          /*
-          // offset by interpupillary distance
-          if(eye == 0)
-              glTranslatef(oculusRift.IPD, 0.0f, 0.0f);
-          else if (eye == 1)
-              glTranslatef(-oculusRift.IPD, 0.0f, 0.0f);
-          */
-
-          glPushMatrix();
-
-            const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams((OVR::Util::Render::StereoEye)0);
-
-              glMatrixMode(GL_PROJECTION);
-              glLoadIdentity();
-              applyGlMatrix(params.ViewAdjust);
-              applyGlMatrix(params.Projection);
-
-              glMatrixMode(GL_MODELVIEW);
-              glLoadIdentity();
-
-              OVR::Matrix4f eye_view = eyeView((OVR::Util::Render::StereoEye)eye);
-              applyGlMatrix(eye_view);
-              // draw scene
-
-              drawScene(0);
-
-          glPopMatrix();
-
-          // unbind framebuffer, now render to screen
-          glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
-
-
-
-
-          glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
-          glGenerateMipmap(GL_TEXTURE_2D);
-          glBindTexture(GL_TEXTURE_2D, 0);
-
-          if(eye == 0)                        // left screen
-              glViewport (0, 0, 1280/2., 800);
-          else if (eye == 1)                  // right screen
-              glViewport (1280/2., 0, 1280/2., 800);
-
-          glMatrixMode (GL_PROJECTION);
-          glLoadIdentity ();
-          glMatrixMode (GL_MODELVIEW);
-
-          glLoadIdentity();
-
-          if(1)
-          {
-              glUseProgram(_shaderProgram);
-
-              // preset suggestions from http://www.mtbs3d.com/phpbb/viewtopic.php?f=140&t=17081
-              const float Scale[2] = {0.1469278, 0.2350845};
-              const float ScaleIn[2] = {2, 2.5};
-              const float HmdWarpParam[4] = {1, 0.22, 0.24, 0};
-              const float LeftLensCenter[2] = {0.2863248*2.0, 0.5};
-              const float LeftScreenCenter[2] = {0.55, 0.5};
-              const float RightLensCenter[2] = {(0.7136753-.5) * 2.0, 0.5};
-              const float RightScreenCenter[2] = {0.45, 0.5};
-
-              // apply shader uniforms
-              glUniform2fv(uniforms[3], 1, Scale);
-              glUniform2fv(uniforms[4], 1, ScaleIn);
-              glUniform4fv(uniforms[5], 1, HmdWarpParam);
-              if(eye == 0)
-              {
-                  glUniform2fv(uniforms[1], 1, LeftLensCenter);
-                  glUniform2fv(uniforms[2], 1, LeftScreenCenter);
-              }
-              else
-              {
-                  glUniform2fv(uniforms[1], 1, RightLensCenter);
-                  glUniform2fv(uniforms[2], 1, RightScreenCenter);
-              }
-          }
-          else{  // no warp, closer to fill screen
-              glTranslatef(0, 0, -1.0);
-          }
-
-
-             // draw scene on a quad for each side
-          glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
-
-          glColor4f(1, 1, 1, 1);
-
-          glBegin(GL_TRIANGLES);
-           glNormal3f(0,0,1);
-           glTexCoord2f(1,1);  glVertex3f(1,1,0);
-           glTexCoord2f(0,1);  glVertex3f(-1,1,0);
-           glTexCoord2f(0,0);  glVertex3f(-1,-1,0);
-           glTexCoord2f(0,0);  glVertex3f(-1,-1,0);
-           glTexCoord2f(1,0);  glVertex3f(1,-1,0);
-           glTexCoord2f(1,1);  glVertex3f(1,1,0);
-           glEnd();
-
-           glBindTexture(GL_TEXTURE_2D, 0);
-
-
-          /*
-          if(warping)
-              glUseProgram(0);
-            */
-
-      }
-     // glFlush();
-
-
-
-    /*
-    renderScene2Framebuffer();
-    postprocessFramebuffer();*/
+    renderEye(OVR::Util::Render::StereoEye_Left);
+    renderEye(OVR::Util::Render::StereoEye_Right);
 }
 
-void ContextWrapper::drawScene(int eye)
+void ContextWrapper::renderEye(OVR::Util::Render::StereoEye eye)
 {
+    const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams(eye);
+    if(params.pDistortion == NULL)
+        return;
 
 
+    GLint oldFBO;
+    GLint oldTEX;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTEX);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // setup scene to render to texture
+    glViewport(0, 0, _frameBufferTexW, _frameBufferTexH);
+    glMatrixMode (GL_PROJECTION);
+
+    glLoadIdentity ();
+
+    glMatrixMode (GL_MODELVIEW);
+    // setup texture
+    glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
+
+
+    glClearColor(.9, .4, 0.4, 1);
+    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //draw scene to square texture
+    glLoadIdentity ();
+
+
+    // offset by interpupillary distance
+    if(eye == OVR::Util::Render::StereoEye_Left)
+        glTranslatef(_hmdInfo.InterpupillaryDistance, 0.0f, 0.0f);
+    else if (eye == OVR::Util::Render::StereoEye_Right)
+        glTranslatef(-_hmdInfo.InterpupillaryDistance, 0.0f, 0.0f);
+
+
+    glPushMatrix();
+
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    applyGlMatrix(params.ViewAdjust);
+    applyGlMatrix(params.Projection);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    OVR::Matrix4f eye_view = eyeView((OVR::Util::Render::StereoEye)eye);
+    applyGlMatrix(eye_view);
+
+
+    // draw scene
+    drawScene(eye);
+
+    glPopMatrix();
+
+    // unbind framebuffer, now render to screen
+    glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+
+    glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    if(eye == OVR::Util::Render::StereoEye_Left)                        // left screen
+        glViewport (0, 0, 1280/2., 800);
+    else if (eye == OVR::Util::Render::StereoEye_Right)                  // right screen
+        glViewport (1280/2., 0, 1280/2., 800);
+
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity ();
+    glMatrixMode (GL_MODELVIEW);
+
+    glLoadIdentity();
+
+    glUseProgram(_shaderProgram);
+
+    // preset suggestions from http://www.mtbs3d.com/phpbb/viewtopic.php?f=140&t=17081
+    const float Scale[2] = {0.1469278, 0.2350845};
+    const float ScaleIn[2] = {2, 2.5};
+    const float HmdWarpParam[4] = {1, 0.22, 0.24, 0};
+    const float LeftLensCenter[2] = {0.2863248*2.0, 0.5};
+    const float LeftScreenCenter[2] = {0.55, 0.5};
+    const float RightLensCenter[2] = {(0.7136753-.5) * 2.0, 0.5};
+    const float RightScreenCenter[2] = {0.45, 0.5};
+
+    // apply shader uniforms
+    glUniform2fv(uniforms[3], 1, Scale);
+    glUniform2fv(uniforms[4], 1, ScaleIn);
+    glUniform4fv(uniforms[5], 1, HmdWarpParam);
+    if(eye == OVR::Util::Render::StereoEye_Left)
+    {
+        glUniform2fv(uniforms[1], 1, LeftLensCenter);
+        glUniform2fv(uniforms[2], 1, LeftScreenCenter);
+    }
+    else
+    {
+        glUniform2fv(uniforms[1], 1, RightLensCenter);
+        glUniform2fv(uniforms[2], 1, RightScreenCenter);
+    }
+
+
+    // draw scene on a quad for each side
+    glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
+
+    glColor4f(1, 1, 1, 1);
+
+    glBegin(GL_TRIANGLES);
+    glNormal3f(0,0,1);
+    glTexCoord2f(1,1);  glVertex3f(1,1,0);
+    glTexCoord2f(0,1);  glVertex3f(-1,1,0);
+    glTexCoord2f(0,0);  glVertex3f(-1,-1,0);
+    glTexCoord2f(0,0);  glVertex3f(-1,-1,0);
+    glTexCoord2f(1,0);  glVertex3f(1,-1,0);
+    glTexCoord2f(1,1);  glVertex3f(1,1,0);
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-// output each viewpoint to the display screen.
-void ContextWrapper::renderEyePatch(OVR::Util::Render::StereoEye eye)
+void ContextWrapper::setEyeUniform(OVR::Util::Render::StereoEye eye,const OVR::Util::Render::StereoEyeParams& params)
 {
     // apply distortion for each eye.
-    const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams(eye);
     if(params.pDistortion)
     {
         GLsizei width =_hmdInfo.HResolution;
@@ -750,61 +655,11 @@ void ContextWrapper::renderEyePatch(OVR::Util::Render::StereoEye eye)
             std::cout << "ChromAbParam: " <<  ChromAbParam[0] << "," << ChromAbParam[1]<< "," << ChromAbParam[2]<< "," << ChromAbParam[3] << std::endl;
         }
     }
-
-    // render the quad on display.
-    _eyePatch[eye].render();
 }
 
-// send 3D screen render to the display.
-// apply the post process shaders.
-void ContextWrapper::postprocessFramebuffer(void)
+
+void ContextWrapper::drawScene(int eye)
 {
-    // dumb way to display the frame buffer as a full screen quad, but hey...
-    glPushAttrib(GL_TEXTURE_BIT | GL_DEPTH_TEST | GL_LIGHTING );
-
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_TEXTURE_2D);
-
-    // Render to the screen
-
-    GLint oldFBO;
-    GLint oldTEX;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTEX);
 
 
-
-    // reset the screen params.
-    glViewport(0, 0,_hmdInfo.HResolution,_hmdInfo.VResolution);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
-    // clear the screen.
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-    // setup the post process shader.
-    glUseProgram(_shaderProgram);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
-  //  gl_uniform_1i("texture0", 0);
-    gl_uniform_1i("tex", 0);
-  //  gl_uniform_1i("texture", 0);
- //   gl_uniform_1i("distortion", 1);
-
-    // render left eye with distortion shader
-    renderEyePatch(OVR::Util::Render::StereoEye_Left);
-
-    // render right eye with distortion shader
-    renderEyePatch(OVR::Util::Render::StereoEye_Right);
-
-    // clean up.
-  //  glBindTexture(GL_TEXTURE_2D, oldTEX);
-    glUseProgram(oldFBO);
-
-    glPopAttrib();
 }
