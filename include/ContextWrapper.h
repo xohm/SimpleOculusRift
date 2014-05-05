@@ -152,7 +152,7 @@ struct EyePatch
                     { 1.0f, 1.0f, },
                     { 0.5f, 1.0f, }, }
         };
-
+/*
         // load up the eye quad.
         glGenVertexArrays(1, &_vertexArrays);
         glBindVertexArray(_vertexArrays);
@@ -164,10 +164,12 @@ struct EyePatch
         glGenBuffers(1, &_uvBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, _uvBuffer);
         glBufferData(GL_ARRAY_BUFFER, sizeof(g_uv_buffer_data[eye]), &(g_uv_buffer_data[eye][0][0]), GL_STATIC_DRAW);
+        */
     }
 
     void render()
     {
+        /*
         // render the quad for the eye patch on Oculus display.
         glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
         glEnableVertexAttribArray(0);
@@ -182,13 +184,16 @@ struct EyePatch
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
+    */
     }
 
     void cleanup()
     {
+        /*
         glDeleteBuffers(1, &_vertexBuffer);
         glDeleteBuffers(1, &_uvBuffer);
         glDeleteVertexArrays(1, &_vertexArrays);
+        */
     }
 
     GLuint _vertexArrays;

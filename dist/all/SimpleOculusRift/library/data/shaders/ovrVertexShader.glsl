@@ -1,12 +1,7 @@
- 
-#version 110
-attribute vec3 Position;
-attribute vec2 TexCoord;
-varying vec2 oTexCoord;
+#version 120
 
 void main()
 {
-   gl_Position = vec4(Position, 1);
-   oTexCoord = TexCoord;
+        gl_TexCoord[0] = gl_MultiTexCoord0;
+        gl_Position = gl_Vertex;
 }
-

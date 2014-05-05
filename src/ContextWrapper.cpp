@@ -55,6 +55,7 @@ using namespace sOR;
 
 bool ContextWrapper::_globalContextFlag = false;
 
+GLint uniforms[6];
 
 ContextWrapper::ContextWrapper():
   _initFlag(false),
@@ -316,7 +317,7 @@ void applyGlMatrix(const OVR::Matrix4f& matrix)
 void ContextWrapper::setupCamera(OVR::Util::Render::StereoEye eye)
 {
     const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams(eye);
-    glViewport(params.VP.x, params.VP.y, params.VP.w, params.VP.h);
+    glViewport(0,0,1024,1024);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -458,6 +459,15 @@ void ContextWrapper::setupShaders()
         logOut(Msg_Info,"%s", &ProgramErrorMessage[0]);
     }
 
+
+    uniforms[0] = glGetUniformLocation(_shaderProgram, "Texture");
+    uniforms[1] = glGetUniformLocation(_shaderProgram, "LensCenter");
+    uniforms[2] = glGetUniformLocation(_shaderProgram, "ScreenCenter");
+    uniforms[3] = glGetUniformLocation(_shaderProgram, "Scale");
+    uniforms[4] = glGetUniformLocation(_shaderProgram, "ScaleIn");
+    uniforms[5] = glGetUniformLocation(_shaderProgram, "HmdWarpParam");
+
+
     glDeleteShader(VertexShaderID);
     glDeleteShader(FragmentShaderID);
 
@@ -466,11 +476,9 @@ void ContextWrapper::setupShaders()
 void ContextWrapper::setupFrameBuffer()
 {
     // setup frame buffer. Resolution can be set to anything, preferably higher than oculus resolution.
-    GLsizei width = _hmdInfo.HResolution;
-    GLsizei height = _hmdInfo.VResolution;
+    GLsizei width = 1024;
+    GLsizei height = 1024;
 
-    glGenFramebuffers(1, &_frameBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
 
     // The texture we're going to render to
     glGenTextures(1, &_frameBufferTexture);
@@ -478,25 +486,24 @@ void ContextWrapper::setupFrameBuffer()
     // "Bind" the newly created texture : all future texture functions will modify this texture
     glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
 
-    // Give an empty image to OpenGL ( the last "0" )
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
-    // linear filtering.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glGenFramebuffers(1, &_frameBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
 
     // The depth buffer
     glGenRenderbuffers(1, &_frameBufferDepth);
     glBindRenderbuffer(GL_RENDERBUFFER, _frameBufferDepth);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _frameBufferTexture, 0);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _frameBufferDepth);
 
-    // Set "renderedTexture" as our colour attachement #0
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, _frameBufferTexture, 0);
-
-    // Set the list of draw buffers.
-    GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, drawBuffers); // "1" is the size of DrawBuffers
 
     // Always check that our framebuffer is ok
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -538,10 +545,149 @@ void ContextWrapper::renderScene2Framebuffer()
     glPopAttrib();
 }
 
+
 void ContextWrapper::draw()
 {
+    glClearColor(1, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    for(int eye = 0; eye < 2; eye++)
+    {  // 0 = left , 1 = right
+        GLint oldFBO;
+        GLint oldTEX;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTEX);
+
+
+          // setup scene to render to texture
+          glViewport(0, 0, 1024, 1024);
+          glMatrixMode (GL_PROJECTION);
+
+          glLoadIdentity ();
+
+          glMatrixMode (GL_MODELVIEW);
+          // setup texture
+          glBindFramebuffer(GL_FRAMEBUFFER, _frameBuffer);
+
+          glClearColor(1, 0, 1, 1);
+          glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+          //draw scene to square texture
+          glLoadIdentity ();
+
+          /*
+          // offset by interpupillary distance
+          if(eye == 0)
+              glTranslatef(oculusRift.IPD, 0.0f, 0.0f);
+          else if (eye == 1)
+              glTranslatef(-oculusRift.IPD, 0.0f, 0.0f);
+          */
+
+          glPushMatrix();
+
+            const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams((OVR::Util::Render::StereoEye)0);
+
+              glMatrixMode(GL_PROJECTION);
+              glLoadIdentity();
+              applyGlMatrix(params.ViewAdjust);
+              applyGlMatrix(params.Projection);
+
+              glMatrixMode(GL_MODELVIEW);
+              glLoadIdentity();
+
+              OVR::Matrix4f eye_view = eyeView((OVR::Util::Render::StereoEye)eye);
+              applyGlMatrix(eye_view);
+              // draw scene
+
+              drawScene(0);
+
+          glPopMatrix();
+
+          // unbind framebuffer, now render to screen
+          glBindFramebuffer(GL_FRAMEBUFFER, oldFBO);
+
+
+
+
+          glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
+          glGenerateMipmap(GL_TEXTURE_2D);
+          glBindTexture(GL_TEXTURE_2D, 0);
+
+          if(eye == 0)                        // left screen
+              glViewport (0, 0, 1280/2., 800);
+          else if (eye == 1)                  // right screen
+              glViewport (1280/2., 0, 1280/2., 800);
+
+          glMatrixMode (GL_PROJECTION);
+          glLoadIdentity ();
+          glMatrixMode (GL_MODELVIEW);
+
+          glLoadIdentity();
+
+          if(1)
+          {
+              glUseProgram(_shaderProgram);
+
+              // preset suggestions from http://www.mtbs3d.com/phpbb/viewtopic.php?f=140&t=17081
+              const float Scale[2] = {0.1469278, 0.2350845};
+              const float ScaleIn[2] = {2, 2.5};
+              const float HmdWarpParam[4] = {1, 0.22, 0.24, 0};
+              const float LeftLensCenter[2] = {0.2863248*2.0, 0.5};
+              const float LeftScreenCenter[2] = {0.55, 0.5};
+              const float RightLensCenter[2] = {(0.7136753-.5) * 2.0, 0.5};
+              const float RightScreenCenter[2] = {0.45, 0.5};
+
+              // apply shader uniforms
+              glUniform2fv(uniforms[3], 1, Scale);
+              glUniform2fv(uniforms[4], 1, ScaleIn);
+              glUniform4fv(uniforms[5], 1, HmdWarpParam);
+              if(eye == 0)
+              {
+                  glUniform2fv(uniforms[1], 1, LeftLensCenter);
+                  glUniform2fv(uniforms[2], 1, LeftScreenCenter);
+              }
+              else
+              {
+                  glUniform2fv(uniforms[1], 1, RightLensCenter);
+                  glUniform2fv(uniforms[2], 1, RightScreenCenter);
+              }
+          }
+          else{  // no warp, closer to fill screen
+              glTranslatef(0, 0, -1.0);
+          }
+
+
+             // draw scene on a quad for each side
+          glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
+
+          glColor4f(1, 1, 1, 1);
+
+          glBegin(GL_TRIANGLES);
+           glNormal3f(0,0,1);
+           glTexCoord2f(1,1);  glVertex3f(1,1,0);
+           glTexCoord2f(0,1);  glVertex3f(-1,1,0);
+           glTexCoord2f(0,0);  glVertex3f(-1,-1,0);
+           glTexCoord2f(0,0);  glVertex3f(-1,-1,0);
+           glTexCoord2f(1,0);  glVertex3f(1,-1,0);
+           glTexCoord2f(1,1);  glVertex3f(1,1,0);
+           glEnd();
+
+           glBindTexture(GL_TEXTURE_2D, 0);
+
+
+          /*
+          if(warping)
+              glUseProgram(0);
+            */
+
+      }
+     // glFlush();
+
+
+
+    /*
     renderScene2Framebuffer();
-    postprocessFramebuffer();
+    postprocessFramebuffer();*/
 }
 
 void ContextWrapper::drawScene(int eye)

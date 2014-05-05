@@ -34,14 +34,21 @@ void draw()
 */ 
  //  background(110,100,0);
    
+   pushMatrix();
    // draw the distortion on the screen
    oculusRiftDev.draw();
+   
+   popMatrix();
+   
+   line(0,0,0,
+        1280,800,0);
 } 
 
 // SimpleOculusRift call for drawing the scene for each eye
 void onDrawScene(int eye)
 {  
   stroke(200,200,220);
+   
   
   beginShape(LINES);
   vertex(-1600,200,0);
