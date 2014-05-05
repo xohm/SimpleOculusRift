@@ -69,9 +69,8 @@ ContextWrapper::ContextWrapper():
   _frameBufferTexW(1024),
   _frameBufferTexH(1024)
 */
-_frameBufferTexW(1024*2),
-_frameBufferTexH(1024*2)
-
+  _frameBufferTexW(1024*4),
+  _frameBufferTexH(1024*4)
 {
     _clearColor[0] = 0;
     _clearColor[1] = 0;
@@ -223,8 +222,8 @@ bool ContextWrapper::init(int w,int h)
         _hmd->GetDeviceInfo(&_hmdInfo);
 
         _stereoConfig.SetHMDInfo(_hmdInfo);
-        _stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, _w, _h));
-        //_stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, _hmdInfo.HResolution, _hmdInfo.VResolution));
+        //_stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, _w, _h));
+        _stereoConfig.SetFullViewport(OVR::Util::Render::Viewport(0,0, 2.0*_hmdInfo.HResolution, _hmdInfo.VResolution));
         _stereoConfig.SetStereoMode(OVR::Util::Render::Stereo_LeftRight_Multipass);
 
         if (_hmdInfo.HScreenSize > 0.140f) // 7"
@@ -336,7 +335,8 @@ void ContextWrapper::getMatrix(int eye,
 
     glViewport(0,0,_frameBufferTexW,_frameBufferTexH);
 
-    OVR::Matrix4f p = params.ViewAdjust * params.Projection;
+    //OVR::Matrix4f p = params.ViewAdjust * params.Projection;
+    OVR::Matrix4f p = params.Projection * params.ViewAdjust;
     memcpy(proj,p.M,sizeof(float) * 16);
 
 
@@ -516,6 +516,16 @@ void ContextWrapper::draw()
     glPopAttrib();
 }
 
+void perspective(double fovY , double aspect, double zNear ,double zFar)
+{
+    const double pi = 3.14159265359;
+    double fW, fH;
+    fH = tan(fovY/360.*pi) * zNear;
+    fW = fH * aspect;
+    glFrustum(-fW, fW, -fH, fH, zNear, zFar);
+}
+
+
 void ContextWrapper::renderEye(OVR::Util::Render::StereoEye eye)
 {
     const OVR::Util::Render::StereoEyeParams& params = _stereoConfig.GetEyeRenderParams(eye);
@@ -561,6 +571,8 @@ void ContextWrapper::renderEye(OVR::Util::Render::StereoEye eye)
     glLoadIdentity();
     applyGlMatrix(params.ViewAdjust);
     applyGlMatrix(params.Projection);
+
+    //perspective(190.0f,(1280/2.0f)/(float)(800),.1f,10000.0f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -621,6 +633,8 @@ void ContextWrapper::renderEye(OVR::Util::Render::StereoEye eye)
         glUniform2fv(uniforms[2], 1, RightScreenCenter);
     }
 
+ //   setEyeUniform(eye,params);
+
 
     // draw scene on a quad for each side
     glBindTexture(GL_TEXTURE_2D, _frameBufferTexture);
@@ -662,12 +676,21 @@ void ContextWrapper::setEyeUniform(OVR::Util::Render::StereoEye eye,const OVR::U
         float scaleFactor       = 1.0f / distortion.Scale;
         OVR::Vector2f LensCenter        (x + (w + (eye == OVR::Util::Render::StereoEye_Right ? - distortion.XCenterOffset: distortion.XCenterOffset) * 0.5f)*0.5f, y + h*0.5f);
         OVR::Vector2f ScreenCenter      (x + w*0.5f, y + h*0.5f);
-        OVR::Vector2f Scale             ((w/2) * scaleFactor, (h/2) * scaleFactor * as);
-        OVR::Vector2f ScaleIn           ((2/w), (2/h) / as);
+        OVR::Vector2f Scale             ((w/2.0f) * scaleFactor, (h/2.0f) * scaleFactor * as);
+        OVR::Vector2f ScaleIn           ((2.0f/w), (2.0f/h) / as);
 
         // fragment shader.
  //       gl_uniform_1i("WarpTexture", 0);
  //       gl_uniform_1i("tex", 0);
+
+       //ScreenCenter = OVR::Vector2f(x+w, y+h);
+        //ScreenCenter    = (x + w*0.5f, y + h*0.5f);
+  //      LensCenter      = OVR::Vector2f(x + (w + (eye == OVR::Util::Render::StereoEye_Right ? - distortion.XCenterOffset: distortion.XCenterOffset))*1.0f, y + h*1.0f);
+  //      ScaleIn         = OVR::Vector2f((1.0f / w), (2.0f/h) / as);
+     //   LensCenter      = OVR::Vector2f(0.2863248*2.0, 0.5);
+        ScreenCenter    = OVR::Vector2f(0.55, 0.5);
+        ScaleIn         = OVR::Vector2f(1.0f / w ,2.0f / h / as);
+     //   Scale           = OVR::Vector2f(0.1469278, 0.2350845 * 3.0f);
 
         gl_uniform_2f("LensCenter",     LensCenter.x,    LensCenter.y);
         gl_uniform_2f("ScreenCenter",   ScreenCenter.x,  ScreenCenter.y);
@@ -682,8 +705,10 @@ void ContextWrapper::setEyeUniform(OVR::Util::Render::StereoEye eye,const OVR::U
           //  firstTime = true;
             std::cout << "----------------------" << std::endl;
 
+            std::cout << " distortion.Scale: " <<   distortion.Scale << std::endl;
+            std::cout << "val: " <<  x << ","<<  y << ","<<  w << ","<<  h << std::endl;
+            std::cout << "_hmdInfo.resolution: " <<  _hmdInfo.HResolution << "," << _hmdInfo.VResolution << std::endl;
             std::cout << "params: " <<  params.VP.x << "," << params.VP.y << "," << params.VP.w << "," << params.VP.h << std::endl;
-
             std::cout << "LensCenter: " <<  LensCenter.x << "," << LensCenter.y << std::endl;
             std::cout << "ScreenCenter: " <<  ScreenCenter.x << "," << ScreenCenter.y << std::endl;
             std::cout << "Scale: " <<  Scale.x << "," << Scale.y << std::endl;

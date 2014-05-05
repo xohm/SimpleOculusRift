@@ -18,10 +18,13 @@ PVector  planeP1 = new PVector(0,0,0);
 PVector  planeP2 = new PVector(1,0,0);
 PVector  planeP3 = new PVector(0,1,0);
 
+bool fullScreen = true;
 void setup()
 {
-  size(1280,800,OPENGL);
-  //  size(1920,1200,OPENGL);
+  if(fullScreen)
+    size(1920,1200,OPENGL);
+  else    
+    size(1280,800,OPENGL);
   
   println("OPENGL_VERSION: " + PGraphicsOpenGL.OPENGL_VERSION);
   println("GLSL_VERSION: " + PGraphicsOpenGL.GLSL_VERSION);
@@ -31,6 +34,8 @@ void setup()
   
   stroke(200,200,220);
   fill(100,100,220);
+  
+  strokeWeight(.3);
 
 }
 
@@ -100,13 +105,22 @@ void onDrawScene(int eye)
   box(200);
   popMatrix();
 
+  pushMatrix();
+  translate(400,0,-1250);
+  box(200);
+  popMatrix();
+
+  pushMatrix();
+  translate(-400,0,-1250);
+   box(200);
+  popMatrix();
+
   flush();
 }
 
 boolean sketchFullScreen() 
 {
- // return true;
-      return false;
+    return fullScreen;
 }     
 
 void keyPressed()

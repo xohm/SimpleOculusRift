@@ -251,6 +251,7 @@ public class SimpleOculusRift extends ContextWrapper
              PMatrix3D proj = p3d.projection;
              PMatrix3D modelview = p3d.modelview;
 
+             //proj = new PMatrix3D();
              getMatrix(eye,
                        proj,
                        modelview) ;
