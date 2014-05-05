@@ -84,7 +84,7 @@ void onDrawScene(int eye)
     translate(0,0,100);
   }
   popMatrix();
-  
+   
  // strokeWeight(.5);
   line(-1600,200,0,1000,20,-1600);
 
@@ -95,8 +95,8 @@ void onDrawScene(int eye)
 
   pushMatrix();
   translate(0,0,-250);
-  rotate(anim);
-  anim+=.1;
+  rotateY(anim);
+  anim+=.008;
   box(100);
   popMatrix();
 
