@@ -339,17 +339,8 @@ void ContextWrapper::getMatrix(int eye,
     OVR::Matrix4f p = params.Projection * params.ViewAdjust;
     memcpy(proj,p.M,sizeof(float) * 16);
 
-
-/*
-    applyGlMatrix(params.ViewAdjust);
-    applyGlMatrix(params.Projection);
-*/
-
     OVR::Matrix4f eye_view = eyeView((OVR::Util::Render::StereoEye)eye);
- //   eye_view.Transpose();
-    //eye_view.SetIdentity();
     memcpy(modelView,eye_view.M,sizeof(float) * 16);
-
 }
 
 

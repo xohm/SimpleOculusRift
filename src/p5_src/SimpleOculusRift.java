@@ -28,7 +28,7 @@ import java.lang.reflect.Method;
 import processing.opengl.*;
 import java.net.URL;
 
-public class SimpleOculusRift extends ContextWrapper
+public class SimpleOculusRift extends ContextWrapper implements SimpleOculusRiftConstants
 {
         static String nativDepLibPath = "";
         static String nativLibPath = "";
@@ -257,6 +257,8 @@ public class SimpleOculusRift extends ContextWrapper
                        modelview) ;
 
              _drawSceneMethod.invoke(_cbObject, new Object[] { (int)eye });
+             _parent.flush();
+
              _parent.popMatrix();
         }
         catch(Exception e)

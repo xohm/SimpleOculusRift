@@ -7,120 +7,116 @@
  * prog:  Max Rheiner / Interaction Design / Zhdk / http://iad.zhdk.ch/
  * date:  04/27/2014 (m/d/y)
  * ----------------------------------------------------------------------------
- */ 
- 
+ * 1 unit should be 1m in the scene
+ * ----------------------------------------------------------------------------
+ */
+
 import SimpleOculusRift.*;
 
- 
 SimpleOculusRift   oculusRiftDev;
-  // grid
-PVector  planeP1 = new PVector(0,0,0);
-PVector  planeP2 = new PVector(1,0,0);
-PVector  planeP3 = new PVector(0,1,0);
 
-bool fullScreen = true;
+float   animRot = 0;
+float   animLin1 = 5;
+boolean animDirFlag1 = true;
+float   animLin2 = 2;
+boolean animDirFlag2 = true;
+
+float floorDist = 1.7;
+
+
+boolean   fullScreen = false;
+//boolean   fullScreen = true;
+
 void setup()
 {
   if(fullScreen)
-    size(1920,1200,OPENGL);
+    size(1920, 1200, OPENGL);
   else    
-    size(1280,800,OPENGL);
-  
+    size(1280, 800, OPENGL);
+
   println("OPENGL_VERSION: " + PGraphicsOpenGL.OPENGL_VERSION);
   println("GLSL_VERSION: " + PGraphicsOpenGL.GLSL_VERSION);
-  
-  oculusRiftDev = new SimpleOculusRift(this); 
-  oculusRiftDev.setBknColor(.4,0,0);
-  
-  stroke(200,200,220);
-  fill(100,100,220);
-  
-  strokeWeight(.3);
 
+  oculusRiftDev = new SimpleOculusRift(this); 
+  oculusRiftDev.setBknColor(10,13, 2);  // just not total black, to see the barr el distortion
+
+  strokeWeight(.3);
 }
 
 void draw()
 {
-//    background(100,100,100);
- /*
+  /*
+  // get the data of head tracking sensor
   PVector orientation = new PVector();
   oculusRiftDev.sensorOrientation(orientation);
   println(orientation);   
-*/ 
- //  background(110,100,0);
-   line(0,0,0,
-        0,800*4,0);   
- 
-   // draw the distortion on the screen
-   oculusRiftDev.draw();
-   
+  */
 
-
+  // draw the distortion on the screen
+  oculusRiftDev.draw();
 } 
-
-float anim = 0;
 
 // SimpleOculusRift call for drawing the scene for each eye
 void onDrawScene(int eye)
 {  
-   
-  beginShape(LINES);
-  vertex(-1600,200,0);
-  vertex(1000,0,-1600);
-  endShape();
+  /*
+  //shows which eye is currently rendered
+  if(eye == SimpleOculusRift.StereoEye_Left)
+    println("draw left eye");
+  else
+    println("draw right eye");
+  */
+  
+  stroke(200, 200, 220);
+  fill(100, 100, 220);
 
+  drawGrid(new PVector(0, -floorDist, 0), 10, 10);
 
+  // sphere
   pushMatrix();
-  translate(-1000,-1500,0);
-  for(int i=0;i<20;i++)
-  {
-    line(0,0,-3000,
-         0,0,3000);
-    translate(100,0,0);
-  }
+  translate(-3, -floorDist + animLin1 - .5, 0);
+  sphere(1);
+  popMatrix();
+  animLin1 += .005 * (animDirFlag1 ? -1:1);
+  if(animLin1 < 3)
+    animDirFlag1 = !animDirFlag1;
+  else if(animLin1 > 8)
+    animDirFlag1 = !animDirFlag1;
+    
+  // anim box
+  fill(100,20,100);
+  pushMatrix();
+  translate(0, 0, -3);
+  rotateY(animRot);
+  animRot+=.008;
+  box(1);
+  popMatrix();
+
+  // anim box boxes
+  fill(100,20,20);
+  pushMatrix();
+  translate(animLin2, -floorDist + .5, -1.5);
+  box(1);
   popMatrix();
   
-  pushMatrix();
-  translate(0,-1500,-1000);
-  for(int i=0;i<20;i++)
-  {
-    line(-3000,0,0,
-         3000,0,0);
-    translate(0,0,100);
-  }
-  popMatrix();
-   
- // strokeWeight(.5);
-  line(-1600,200,0,1000,20,-1600);
+  animLin2 += .01 * (animDirFlag2 ? -1:1);
+  if(animLin2 < -1.0)
+    animDirFlag2 = !animDirFlag2;
+  else if(animLin2 > 3)
+    animDirFlag2 = !animDirFlag2;
+      
 
+  // static box
+  fill(100,200,20);
   pushMatrix();
-  translate(-1600,200,0);
-  sphere(300);
+  translate(-3,  -floorDist + 1, 0);
+  box(2);
   popMatrix();
-   
-  pushMatrix();
-  translate(0,0,-1250);
-  rotateY(anim);
-  anim+=.008;
-  box(200);
-  popMatrix();
-
-  pushMatrix();
-  translate(400,0,-1250);
-  box(200);
-  popMatrix();
-
-  pushMatrix();
-  translate(-400,0,-1250);
-   box(200);
-  popMatrix();
-
-  flush();
 }
 
 boolean sketchFullScreen() 
 {
-    return fullScreen;
+  return fullScreen;
 }     
 
 void keyPressed()
@@ -129,49 +125,25 @@ void keyPressed()
   oculusRiftDev.resetOrientation();
 }
 
-    void drawPlane(PVector p1, PVector p2, PVector p3,
-                                 int len, int repeat)
-    {
-        repeat--;
+void drawGrid(PVector center, float length, int repeat)
+{
+  pushMatrix();
 
-        // p1 is the center
-        PVector u = PVector.sub(p2, p1);
-        u.normalize();
-        PVector v = PVector.sub(p3, p1);
-        v.normalize();
-        PVector dirUp = u.cross(v);
-        dirUp.normalize();
+  translate(center.x, center.y, center.z);
+  float pos;
 
-        // rectangular
-        PVector dirV = u.cross(dirUp);
-        dirV.normalize();
+  for (int x=0; x < repeat+1;x++)
+  {
+    pos = -length *.5 + x * length / repeat;
 
-        PVector stepsU = PVector.mult(u, (float)len / (float)repeat);
-        PVector stepsV = PVector.mult(dirV, (float)len / (float)repeat);
+    line(-length*.5, 0, pos, 
+    length*.5, 0, pos);
 
-        PVector posU1 = PVector.add(PVector.mult(stepsU, -0.5f * repeat), PVector.mult(stepsV, -0.5f * repeat));
-        PVector posU2 = PVector.add(PVector.mult(stepsU, -0.5f * repeat), PVector.mult(stepsV, 0.5f * repeat));
+    line(pos, 0, -length*.5, 
+    pos, 0, length*.5);
+  }
 
-        PVector posV1 = PVector.add(PVector.mult(stepsU, -0.5f * repeat), PVector.mult(stepsV, -0.5f * repeat));
-        PVector posV2 = PVector.add(PVector.mult(stepsU, 0.5f * repeat), PVector.mult(stepsV, -0.5f * repeat));
 
-                posU1.add(p1);
-                posU2.add(p1);
-                posV1.add(p1);
-                posV2.add(p1);
+  popMatrix();
+}
 
-        // horz
-        for (int i=0;i<repeat+1;i++)
-        {
-            line(posU1.x, posU1.y, posU1.z,
-                   posU2.x, posU2.y, posU2.z);
-            line(posV1.x, posV1.y, posV1.z,
-                   posV2.x, posV2.y, posV2.z);
-
-            posU1.add(stepsU);
-            posU2.add(stepsU);
-
-            posV1.add(stepsV);
-            posV2.add(stepsV);
-        }
-    }
