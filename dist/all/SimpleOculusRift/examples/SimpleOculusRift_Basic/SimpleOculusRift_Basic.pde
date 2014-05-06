@@ -92,7 +92,7 @@ void onDrawScene(int eye)
   box(1);
   popMatrix();
 
-  // anim box boxes
+  // anim box
   fill(100,20,20);
   pushMatrix();
   translate(animLin2, -floorDist + .5, -1.5);
