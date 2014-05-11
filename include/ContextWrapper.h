@@ -37,6 +37,8 @@
 // opengl, glew
 #ifdef __APPLE__
     #include <GL/glew.h>
+#elif _WIN32
+   #include <GL/glew.h>
 #else
     // opengl, glew
     #include <GL/glew.h>
@@ -53,7 +55,7 @@
 #include <iostream>
 
 // eigen
-#include <Eigen/Geometry>
+//#include <Eigen/Geometry>
 
 #include "oculusRiftShaders.h"
 
@@ -141,7 +143,7 @@ public:
         return true;
     }
 
-    bool sensorOrientation(float* orientation) const
+    void sensorOrientation(float* orientation) const
     {
         sensorOrientation(orientation[0],orientation[1],orientation[2]);
     }

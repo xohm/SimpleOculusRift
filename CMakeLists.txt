@@ -43,10 +43,10 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 # -----------------------------------------------------------------------------
 # java tools
 IF(WIN32)
-	SET(JAVA_RUNTIME2  $ENV{JAVA_HOME}/bin/java)
-	SET(JAVA_ARCHIVE2  $ENV{JAVA_HOME}/bin/jar)
-	SET(JAVA_COMPILE2  $ENV{JAVA_HOME}/bin/javac)
-	SET(JAVA_DOC	   $ENV{JAVA_HOME}/bin/javadoc)
+	SET(JAVA_RUNTIME2  ${JAVA_HOME}/bin/java)
+	SET(JAVA_ARCHIVE2  ${JAVA_HOME}/bin/jar)
+	SET(JAVA_COMPILE2  ${JAVA_HOME}/bin/javac)
+	SET(JAVA_DOC	   ${JAVA_HOME}/bin/javadoc)
 ELSE()
 	# unix
 	SET(JAVA_RUNTIME2  java)
@@ -58,6 +58,7 @@ ENDIF()
 
 # -----------------------------------------------------------------------------
 # boost
+
 FIND_PACKAGE(Boost REQUIRED)
 IF(Boost_INCLUDE_DIRS MATCHES "Boost_INCLUDE_DIR-NOTFOUND")
 	MESSAGE("Boost should be set, for example:")
@@ -86,15 +87,17 @@ INCLUDE_DIRECTORIES(${OCULUSRIFT_DIR}/LibOVR/Include)
 IF(APPLE)
 	# osx
 	LINK_DIRECTORIES(${OCULUSRIFT_DIR}/LibOVR/Lib/MacOS/Release)
+	SET(LIBS ${LIBS} ovr)
 ELSEIF(UNIX)
 	# unix/linux,shared libs of boost should be installed
 	LINK_DIRECTORIES(${OCULUSRIFT_DIR}/LibOVR/Lib/Linux/Release/x86_64)
+	SET(LIBS ${LIBS} ovr)
 ELSE()
 	# windows will find the right libs by itself
-	LINK_DIRECTORIES ( ${xxxxxxxx} )	
+	LINK_DIRECTORIES (${OCULUSRIFT_DIR}/LibOVR/Lib/x64)	
+	SET(LIBS ${LIBS} libovr64)
 ENDIF()
 
-SET(LIBS ${LIBS} ovr)
 
 # Oculus SDK dependencies for Mac OSX:
 IF (APPLE)
@@ -105,7 +108,14 @@ ENDIF()
 
 # -----------------------------------------------------------------------------
 # glew
-SET(LIBS ${LIBS} GLEW)
+
+IF(WIN32)
+	INCLUDE_DIRECTORIES(${GLEW_INC})
+	LINK_DIRECTORIES(${GLEW_LIB})	
+	SET(LIBS ${LIBS} glew32)
+ELSE()
+	SET(LIBS ${LIBS} GLEW)
+ENDIF()
 
 FIND_PACKAGE(OpenGL REQUIRED)
 
@@ -149,7 +159,9 @@ SET(P5_WRAPPER_FILE ${CMAKE_CURRENT_SOURCE_DIR}/src/p5_src/SimpleOculusRift.java
 # processing core lib
 # shoud use find_program
 IF(WIN32)
-	SET(P5_JAR "C:/Program Files (x86)/processing-1.2.1/lib/core.jar")	
+	IF(NOT DEFINED P5_JAR)	
+		SET(P5_JAR "C:/Program Files (x86)/processing-1.2.1/lib/core.jar")	
+	ENDIF()
 ELSEIF(APPLE)
 	IF(NOT DEFINED P5_JAR)	
 		SET(P5_JAR "/Applications/Processing.app/Contents/Resources/Java/core.jar")
@@ -195,6 +207,8 @@ IF(APPLE)
   SET(LIBS ${LIBS} ${CORE_FOUNDATION} ${CORE_GRAPHICS} ${IOKIT} ${OPENGL_LIBRARIES} "-framework ApplicationServices")
 ELSEIF(UNIX)  
   SET(LIBS ${LIBS} udev pthread GL X11 Xinerama)
+ELSEIF(WIN32)
+  SET(LIBS ${LIBS} ${OPENGL_LIBRARIES} winmm)
 ENDIF()
     
 SWIG_ADD_MODULE(SimpleOculusRift Java ${SWIG_SOURCES})
@@ -231,24 +245,18 @@ IF(UNIX)
   ENDIF()
 ENDIF()
 
-
 ADD_CUSTOM_COMMAND(TARGET SimpleOculusRift
                     POST_BUILD
                     COMMAND cmake -E echo "-----------------------------"
                     COMMAND cmake -E echo "Compiling Java files..."
                     COMMAND cmake -E make_directory ./SimpleOculusRift
                     COMMAND cmake -E make_directory ${CMAKE_SWIG_OUTDIR}
-                    #COMMAND cmake -E copy_directory ${P5_WRAPPER} ${CMAKE_SWIG_OUTDIR}
-                    # cmake copy doesn't support wildcards, otherwise it just copies the hidden folder of svn, etc.
-                    # doesn't works on windows backslash
                     COMMAND cp "${P5_WRAPPER}*.java" "${CMAKE_SWIG_OUTDIR}"
-                    #COMMAND cmake -E copy ${P5_WRAPPER_FILE} ${CMAKE_SWIG_OUTDIR}
                     COMMAND ${JAVA_COMPILE2} -classpath ${P5_JAR} ${CMAKE_SWIG_OUTDIR}/*.java -d ./
-                    COMMAND cmake -E echo "-----------------------------"
+                    COMMAND cmake -E echo "-----------------------------"                    
                     COMMAND cmake -E echo "Creating jar file..."
                     COMMAND ${JAVA_ARCHIVE2} cvf SimpleOculusRift.jar SimpleOculusRift
                     COMMAND cmake -E echo "-----------------------------"
                     COMMAND cmake -E echo "Creating doc files..."
                     COMMAND cmake -E make_directory ./doc
-                    #COMMAND ${JAVA_DOC} -quiet -author -public -nodeprecated -nohelp -d ./doc  -version ${P5_WRAPPER}/*.java -version ${CMAKE_SWIG_OUTDIR}/ContextWrapper.java)
                     COMMAND ${JAVA_DOC} -classpath ${P5_JAR} -quiet -author -public -nodeprecated -nohelp -d ./doc  -version ${CMAKE_SWIG_OUTDIR}/*.java)

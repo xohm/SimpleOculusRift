@@ -82,7 +82,7 @@ public:
     virtual void draw();
     virtual void drawScene(int eye);
 
-    bool sensorOrientation(float* orientation) const;
+    void sensorOrientation(float* orientation) const;
     void resetOrientation();
     void getMatrix(int eye,
                    float* proj,
