@@ -33,6 +33,10 @@
 
 #ifdef __APPLE__
     #include <unistd.h>
+#elif _WIN32
+
+#else
+    #include <unistd.h>
 #endif
 
 #include <stdio.h>
