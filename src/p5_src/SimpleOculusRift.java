@@ -157,7 +157,7 @@ public class SimpleOculusRift extends ContextWrapper implements SimpleOculusRift
     * @param parent
     *          PApplet
     */
-    public SimpleOculusRift(PApplet parent)
+    public SimpleOculusRift(PApplet parent,int qualtiy)
     {
     /*
         String curPath = SimpleOculusRift.getcwd();
@@ -184,9 +184,25 @@ public class SimpleOculusRift extends ContextWrapper implements SimpleOculusRift
         setupCallbackFunc();
 
         // start openni
-        this.init(parent.width,parent.height);
+        this.init(parent.width,parent.height,qualtiy);
 
     }
+
+    public SimpleOculusRift(PApplet parent)
+    {
+        setDataFolder(getLibraryPathLinux() + "/SimpleOculusRift/library/data/");
+
+        this._parent 	= parent;
+        parent.registerDispose(this);
+
+        // setup the callbacks
+        setupCallbackFunc();
+
+        // start openni
+        this.init(parent.width,parent.height,RenderQuality_Def);
+
+    }
+
 
 
     protected void setupCallbackFunc()
@@ -274,6 +290,13 @@ public class SimpleOculusRift extends ContextWrapper implements SimpleOculusRift
       orientation.set(vec[0],vec[1],vec[2]);
     }
 
+    public PVector sensorOrientation()
+    {
+      float[] vec = new float[3];
+      super.sensorOrientation(vec);
+      return new PVector(vec[0],vec[1],vec[2]);
+    }
+
     public void getMatrix(int eye,
                           PMatrix3D proj,
                           PMatrix3D modelView)
@@ -292,6 +315,19 @@ public class SimpleOculusRift extends ContextWrapper implements SimpleOculusRift
                           m[4],m[5],m[6],m[7],
                           m[8],m[9],m[10],m[11],
                           m[12],m[13],m[14],m[15]);
+    }
+
+    public PMatrix3D headOrientationMatrix()
+    {
+        float[] vec = new float[3];
+        super.sensorOrientation(vec);
+
+        PMatrix3D mat = new PMatrix3D();
+        mat.rotateY(vec[0]);
+        mat.rotateX(vec[1]);
+        mat.rotateZ(vec[2]);
+
+        return mat;
     }
 
     protected PApplet           _parent;

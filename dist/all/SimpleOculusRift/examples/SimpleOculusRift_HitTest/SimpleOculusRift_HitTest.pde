@@ -1,5 +1,5 @@
 /* --------------------------------------------------------------------------
- * SimpleOculusRift Basic
+ * SimpleOculusRift Hit Test
  * --------------------------------------------------------------------------
  * Processing Wrapper for the Oculus Rift
  * http://github.com/xohm/SimpleOculusRift
@@ -7,7 +7,7 @@
  * prog:  Max Rheiner / Interaction Design / Zhdk / http://iad.zhdk.ch/
  * date:  04/27/2014 (m/d/y)
  * ----------------------------------------------------------------------------
- * 1 unit should be 1m in the scene
+ * Shows how to get the head orientation
  * ----------------------------------------------------------------------------
  */
 
@@ -15,16 +15,14 @@ import SimpleOculusRift.*;
 
 SimpleOculusRift   oculusRiftDev;
 
-float   animRot = 0;
-float   animLin1 = 5;
-boolean animDirFlag1 = true;
-float   animLin2 = 2;
-boolean animDirFlag2 = true;
-
 float floorDist = 1.7;
 
 boolean   fullScreen = false;
 //boolean   fullScreen = true;
+
+PVector  boxPos = new PVector(-2,  -floorDist + 1, -3);
+float    boxSize = 1;
+boolean  hit = false;
 
 void setup()
 {
@@ -32,10 +30,6 @@ void setup()
     size(1920, 1200, OPENGL);
   else    
     size(1280, 800, OPENGL);
-
-  // see the opengl version
-  println("OPENGL_VERSION: " + PGraphicsOpenGL.OPENGL_VERSION);
-  println("GLSL_VERSION: " + PGraphicsOpenGL.GLSL_VERSION);
 
   oculusRiftDev = new SimpleOculusRift(this,SimpleOculusRift.RenderQuality_Middle); 
   oculusRiftDev.setBknColor(10,13, 2);  // just not total black, to see the barrel distortion
@@ -45,13 +39,25 @@ void setup()
 
 void draw()
 {
-  /*
-  // get the data of head tracking sensor
-  // in following order: yaw, pitch, roll
-  PVector orientation = oculusRiftDev.sensorOrientation();
-  println(orientation);   
-  */
-
+  // check the intersection
+  PMatrix3D headOrientationMatrix = oculusRiftDev.headOrientationMatrix();
+  headOrientationMatrix.translate(0,0,-10);
+  
+  PVector eyePos = new PVector(0,0,0);
+  PVector dir = headOrientationMatrix.mult(eyePos,null);
+  PVector hit1 = new PVector();
+  PVector hit2 = new PVector();
+  PVector hit1Normal = new PVector();
+  PVector hit2Normal = new PVector();
+  
+  if(boxIntersection(eyePos,dir,
+                     boxPos,boxSize,boxSize,boxSize,
+                     hit1,hit2,
+                     hit1Normal,hit2Normal) > 0)
+    hit = true;  
+  else
+    hit = false;  
+                    
   // draw the distortion on the screen
   oculusRiftDev.draw();
 } 
@@ -59,57 +65,20 @@ void draw()
 // SimpleOculusRift call for drawing the scene for each eye
 void onDrawScene(int eye)
 {  
-  /*
-  //shows which eye is currently rendered
-  if(eye == SimpleOculusRift.StereoEye_Left)
-    println("draw left eye");
-  else
-    println("draw right eye");
-  */
-  
   stroke(200, 200, 220);
   fill(100, 100, 220);
 
   drawGrid(new PVector(0, -floorDist, 0), 10, 10);
-
-  // sphere
-  pushMatrix();
-  translate(-3, -floorDist + animLin1 - .5, 0);
-  sphere(1);
-  popMatrix();
-  animLin1 += .005 * (animDirFlag1 ? -1:1);
-  if(animLin1 < 3)
-    animDirFlag1 = !animDirFlag1;
-  else if(animLin1 > 8)
-    animDirFlag1 = !animDirFlag1;
-    
-  // rot box
-  fill(100,20,100);
-  pushMatrix();
-  translate(0, 0, -3);
-  rotateY(animRot);
-  animRot+=.008;
-  box(1);
-  popMatrix();
-
-  // shift box
-  fill(100,20,20);
-  pushMatrix();
-  translate(animLin2, -floorDist + .5, -1.5);
-  box(1);
-  popMatrix();
-  
-  animLin2 += .01 * (animDirFlag2 ? -1:1);
-  if(animLin2 < -1.0)
-    animDirFlag2 = !animDirFlag2;
-  else if(animLin2 > 3)
-    animDirFlag2 = !animDirFlag2;
       
   // static box
-  fill(100,200,20);
+  if(hit)
+    fill(200,100,20);
+  else
+    fill(100,200,20);
+    
   pushMatrix();
-  translate(-3,  -floorDist + 1, 0);
-  box(2);
+  translate(boxPos.x,boxPos.y,boxPos.z);
+  box(boxSize);
   popMatrix();
 }
 

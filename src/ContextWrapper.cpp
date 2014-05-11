@@ -70,7 +70,8 @@ ContextWrapper::ContextWrapper():
   _frameBufferTexH(1024)
 */
   _frameBufferTexW(1024*4),
-  _frameBufferTexH(1024*4)
+  _frameBufferTexH(1024*4),
+  _headTracking(true)
 {
     _clearColor[0] = 0;
     _clearColor[1] = 0;
@@ -182,7 +183,7 @@ bool ContextWrapper::initContext()
         return _globalContextFlag;
 }
 
-bool ContextWrapper::init(int w,int h)
+bool ContextWrapper::init(int w,int h,int qualtiy)
 {
     if(initContext() == false)
     {
@@ -193,10 +194,27 @@ bool ContextWrapper::init(int w,int h)
     _w = w;
     _h = h;
 
-    /*
-    _w = 1280;
-    _h = 800;
-*/
+    // set quality
+    switch(qualtiy)
+    {
+    case ContextWrapper::High_Quality:
+        _frameBufferTexW = 1024*4;
+        _frameBufferTexH = 1024*4;
+        break;
+    case Middle_Quality:
+        _frameBufferTexW = 1024*2;
+        _frameBufferTexH = 1024*2;
+        break;
+    case VeryLow_Quality:
+        _frameBufferTexW = 512;
+        _frameBufferTexH = 512;
+        break;
+    case Low_Quality:
+    default:
+        _frameBufferTexW = 1024*1;
+        _frameBufferTexH = 1024*1;
+        break;
+    }
 
     // start the oculus
     OVR::System::Init(OVR::Log::ConfigureDefaultLog(OVR::LogMask_All));
@@ -346,6 +364,9 @@ void ContextWrapper::getMatrix(int eye,
 
 OVR::Matrix4f ContextWrapper::eyeView(OVR::Util::Render::StereoEye eye)
 {
+    if(!_headTracking)
+        return OVR::Matrix4f();
+
     static const OVR::Vector3f UpVector(0.0f, 1.0f, 0.0f);
     static const OVR::Vector3f ForwardVector(0.0f, 0.0f, -1.0f);
     static const OVR::Vector3f RightVector(1.0f, 0.0f, 0.0f);
@@ -369,6 +390,7 @@ OVR::Matrix4f ContextWrapper::eyeView(OVR::Util::Render::StereoEye eye)
     OVR::Vector3f eye_up        = eye_rpy.Transform(UpVector);
     OVR::Vector3f eye_right     = eye_rpy.Transform(RightVector);
     OVR::Matrix4f eye_view      = OVR::Matrix4f::LookAtRH(eye_pos, eye_pos + eye_forward, eye_up);
+
     return eye_view;
 }
 

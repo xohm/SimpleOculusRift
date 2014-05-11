@@ -51,22 +51,15 @@
 namespace sOR{
 
 
-class Vec3f
-{
-public:
-    Vec3f(float x,float y,float z);
-    Vec3f(const Vec3f& copy);
-
-    float x() const;
-    float y() const;
-    float z() const;
-
-    //onst float* get();
-};
-
-
 %constant int StereoEye_Left		= OVR::Util::Render::StereoEye_Left;
 %constant int StereoEye_Right		= OVR::Util::Render::StereoEye_Right;
+
+
+%constant int RenderQuality_High	= sOR::ContextWrapper::High_Quality;
+%constant int RenderQuality_Middle      = sOR::ContextWrapper::Middle_Quality;
+%constant int RenderQuality_Low		= sOR::ContextWrapper::Low_Quality;
+%constant int RenderQuality_VeryLow	= sOR::ContextWrapper::VeryLow_Quality;
+%constant int RenderQuality_Def		= sOR::ContextWrapper::Def_Quality;
 
 
 %feature("director") ContextWrapper;
@@ -82,7 +75,7 @@ public:
     static void chdir(const char* dir);
     static std::string getcwd();
 
-    bool init(int w,int h);
+    bool init(int w,int h,int quality);
     void close();
     void setDataFolder(const char* dir);
 

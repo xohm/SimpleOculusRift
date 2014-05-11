@@ -60,48 +60,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 // defines
 
-#define		MAX_DEPTH		10000	// 10m
 #define		STRING_BUFFER	255
-
-#define SOPENNI_CB_VIRTUAL(FuncName,...)\
-    protected:\
-    virtual void on##FuncName##Cb(__VA_ARGS__){;}
-
-#define SOPENNI_CB_CALL(FuncName,...)\
-    on##FuncName##Cb(__VA_ARGS__);
 
 // added this typedef because of problems with virtal methods and the %apply
 typedef const float* constPFloat;
 
 namespace sOR{
-
-class Vec3f
-{
-public:
-    Vec3f(float x,float y,float z)
-    {
-        vec[0] = x;
-        vec[1] = y;
-        vec[2] = z;
-
-    }
-
-    Vec3f(const Vec3f& copy)
-    {
-        vec[0] = copy.vec[0];
-        vec[1] = copy.vec[1];
-        vec[2] = copy.vec[2];
-    }
-
-    float x() const { return vec[0]; }
-    float y() const { return vec[1]; }
-    float z() const { return vec[2]; }
-
-    const float* get() const { return vec; }
-
-protected:
-    float vec[3];
-};
 
 //////////////////////////////////////////////////////////////////////////////
 // ContextWrapper
@@ -110,6 +74,15 @@ protected:
 class ContextWrapper: public OVR::MessageHandler
 {
 public:
+
+    enum{
+        High_Quality    = 0,
+        Middle_Quality  = 1,
+        Low_Quality     = 2,
+        VeryLow_Quality = 3,
+        Def_Quality     = Middle_Quality,
+
+    };
 
     ContextWrapper();
     virtual ~ContextWrapper();
@@ -122,7 +95,7 @@ public:
     //////////////////////////////////////////////////////////////////////////////
     // init methods
     static bool initContext();
-    bool init(int w,int h);
+    bool init(int w,int h,int quality);
     void setDataFolder(const char* dir);
 
     bool isInit(){	return _initFlag; }
@@ -214,6 +187,11 @@ public:
         _clearColor[2] = (float)blue * 1.0f/255.0f;
     }
 
+    void enableHeadTracking(bool flag)
+    {
+        _headTracking = flag;
+    }
+
 protected:
     enum LogOutMsg{
         Msg_End         = 0,
@@ -268,6 +246,7 @@ protected:
     float   _h;
 
     float   _clearColor[3];
+    bool    _headTracking;
 
 };
 
