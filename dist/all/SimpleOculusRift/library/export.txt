@@ -2,5 +2,5 @@
 name = SimpleOculusRift
 
 application.macosx=libboost_system-mt.dylib,libGLEW.1.10.0.dylib,libSimpleOculusRift.jnilib
-application.windows64=
-application.linux64=
+application.windows64=glew32.lib,SimpleOculusRift64.dll
+application.linux64=libSimpleOculusRift64.so
