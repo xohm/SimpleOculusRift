@@ -43,7 +43,7 @@
 
 using namespace sOR;
 
-#define		SIMPLEOCULUSRIFT_VERSION	10		// 1234 = 12.24
+#define		SIMPLEOCULUSRIFT_VERSION	20		// 1234 = 12.24
 
 // if you plan to debug on linux, don't forget to call the following commands, otherwise you want be able to
 // attacht to the shared library
