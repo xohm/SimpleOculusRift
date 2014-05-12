@@ -56,10 +56,8 @@ public class SimpleOculusRift extends ContextWrapper implements SimpleOculusRift
                     nativLibPath = getLibraryPathWin() + "/SimpleOculusRift/library/";
                     nativDepLibPath = nativLibPath + "win64/";
 				}
-				// load dependencies
-				System.load(nativDepLibPath + "OpenNI2.dll");
-				System.load(nativDepLibPath + "NiTE2.dll");
-             }
+
+            }
             else if(sysStr.indexOf("nix") >= 0 || sysStr.indexOf("linux") >=  0 )
             {   // unix
                 nativLibPath = "/SimpleOculusRift/library/linux";
